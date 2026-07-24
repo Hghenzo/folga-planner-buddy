@@ -45,10 +45,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-folga-azul: var(--folga-azul);
-  --color-folga-roxa: var(--folga-roxa);
-  --color-folga-amarela: var(--folga-amarela);
-  --color-folga-vermelha: var(--folga-vermelha);
+  --color-turma-a: var(--turma-a);
+  --color-turma-b: var(--turma-b);
+  --color-turma-c: var(--turma-c);
+  --color-turma-d: var(--turma-d);
+
   --color-brand-cyan: var(--brand-cyan);
   --color-brand-purple: var(--brand-purple);
 }
@@ -87,10 +88,11 @@
   --sidebar-accent-foreground: oklch(0.97 0.01 260);
   --sidebar-border: oklch(0.35 0.04 260 / 50%);
   --sidebar-ring: oklch(0.78 0.15 210);
-  --folga-azul: oklch(0.72 0.17 235);
-  --folga-roxa: oklch(0.7 0.2 300);
-  --folga-amarela: oklch(0.82 0.16 85);
-  --folga-vermelha: oklch(0.7 0.22 20);
+  --turma-a: oklch(0.7 0.22 20);   /* Vermelha */
+  --turma-b: oklch(0.85 0.16 85);  /* Amarela */
+  --turma-c: oklch(0.85 0.13 200); /* Ciano */
+  --turma-d: oklch(0.75 0.12 290); /* Roxa/Lavanda */
+
   --brand-cyan: oklch(0.82 0.14 200);
   --brand-purple: oklch(0.65 0.22 300);
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { CalendarDays, ChevronLeft, ChevronRight, Settings, Users } from "lucide-react";
 import {
-  CORES,
-  CORES_CLASSES,
-  CORES_LABEL,
-  type Config,
-  type CorFolga,
-  corDoDia,
+  TURMAS,
+  TURMAS_CLASSES,
+  TURMAS_LABEL,
+  type Turma,
+  type Pessoas,
+  carregarPessoas,
+  turmaDoDia,
   proximosDias,
 } from "@/lib/folgas";
 
@@ -42,30 +43,33 @@ function Panel({ children, className = "" }: { children: React.ReactNode; classN
   );
 }
 
-function ColorStat({ cor, cfg }: { cor: CorFolga; cfg: Config }) {
-  const cls = CORES_CLASSES[cor];
+function TurmaStat({ turma, pessoas }: { turma: Turma; pessoas: string[] }) {
+  const cls = TURMAS_CLASSES[turma];
   return (
     <Panel className="p-4">
       <div className="flex items-center justify-between">
-        <span className={`text-xs font-semibold uppercase tracking-wider ${cls.text}`}>
-          {CORES_LABEL[cor]}
+        <span className={`text-xs font-black uppercase tracking-wider ${cls.text}`}>
+          {TURMAS_LABEL[turma]}
         </span>
         <span className={`h-2.5 w-2.5 rounded-full ${cls.dot} shadow-[0_0_12px_currentColor]`} />
       </div>
-      <div className="mt-2 text-2xl font-black text-foreground">
-        {cfg.grupos[cor].pessoas.length}
-      </div>
+      <div className="mt-2 text-2xl font-black text-foreground">{pessoas.length}</div>
       <div className="text-[11px] text-muted-foreground">pessoas</div>
     </Panel>
   );
 }
 
-export function CalendarioView({ cfg }: { cfg: Config }) {
+export function CalendarioView() {
   const hoje = useMemo(() => new Date(), []);
   const [cursor, setCursor] = useState(
     () => new Date(hoje.getFullYear(), hoje.getMonth(), 1),
   );
   const [selecionado, setSelecionado] = useState<Date | null>(null);
+  const [pessoas, setPessoas] = useState<Pessoas>({ A: [], B: [], C: [], D: [] });
+
+  useEffect(() => {
+    setPessoas(carregarPessoas());
+  }, []);
 
   const dias = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
@@ -82,10 +86,10 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
     return cells;
   }, [cursor]);
 
-  const corHoje = corDoDia(hoje, cfg);
-  const clsHoje = corHoje ? CORES_CLASSES[corHoje] : null;
-  const proximos = useMemo(() => proximosDias(cfg, 8, hoje), [cfg, hoje]);
-  const corSel = selecionado ? corDoDia(selecionado, cfg) : null;
+  const turmaHoje = turmaDoDia(hoje);
+  const clsHoje = turmaHoje ? TURMAS_CLASSES[turmaHoje] : null;
+  const proximos = useMemo(() => proximosDias(8, hoje), [hoje]);
+  const turmaSel = selecionado ? turmaDoDia(selecionado) : null;
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 p-4 pb-24 sm:p-6">
@@ -98,7 +102,7 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
             </div>
             <div className="min-w-0">
               <h1 className="truncate bg-[image:var(--gradient-primary)] bg-clip-text text-xl font-black text-transparent">
-                Folgas
+                Escala de Folgas
               </h1>
               <p className="truncate text-[11px] uppercase tracking-wider text-muted-foreground">
                 {hoje.toLocaleDateString("pt-BR", {
@@ -122,13 +126,13 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
         </div>
       </Panel>
 
-      {/* Hoje — hero */}
+      {/* Hero — Hoje */}
       <Panel className="relative overflow-hidden p-5">
         <div
           className="pointer-events-none absolute inset-0 opacity-30"
           style={{
-            background: clsHoje
-              ? `radial-gradient(circle at 20% 0%, var(--folga-${corHoje}) 0%, transparent 60%)`
+            background: turmaHoje
+              ? `radial-gradient(circle at 20% 0%, var(--turma-${turmaHoje.toLowerCase()}) 0%, transparent 60%)`
               : "var(--gradient-primary)",
           }}
         />
@@ -136,21 +140,19 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
           <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Folga de hoje
           </div>
-          {corHoje && clsHoje ? (
+          {turmaHoje && clsHoje ? (
             <>
               <div className="mt-2 flex items-center gap-3">
-                <span
-                  className={`h-4 w-4 rounded-full ${clsHoje.dot} shadow-[0_0_16px_currentColor]`}
-                />
+                <span className={`h-4 w-4 rounded-full ${clsHoje.dot} shadow-[0_0_16px_currentColor]`} />
                 <span className={`text-3xl font-black ${clsHoje.text}`}>
-                  {CORES_LABEL[corHoje]}
+                  {TURMAS_LABEL[turmaHoje]}
                 </span>
               </div>
               <div className="mt-4 flex items-start gap-2 text-sm">
                 <Users className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="text-foreground/90">
-                  {cfg.grupos[corHoje].pessoas.length > 0
-                    ? cfg.grupos[corHoje].pessoas.join(", ")
+                  {pessoas[turmaHoje].length > 0
+                    ? pessoas[turmaHoje].join(", ")
                     : "Nenhuma pessoa cadastrada"}
                 </span>
               </div>
@@ -163,10 +165,10 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
         </div>
       </Panel>
 
-      {/* Grid de cores */}
+      {/* Grid de turmas */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {CORES.map((c) => (
-          <ColorStat key={c} cor={c} cfg={cfg} />
+        {TURMAS.map((t) => (
+          <TurmaStat key={t} turma={t} pessoas={pessoas[t]} />
         ))}
       </div>
 
@@ -176,9 +178,7 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() =>
-              setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))
-            }
+            onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
             aria-label="Mês anterior"
             className="rounded-xl"
           >
@@ -190,9 +190,7 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() =>
-              setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
-            }
+            onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
             aria-label="Próximo mês"
             className="rounded-xl"
           >
@@ -201,17 +199,15 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
         </div>
         <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           {DIAS_SEMANA.map((d, i) => (
-            <div key={i} className="py-1.5">
-              {d}
-            </div>
+            <div key={i} className="py-1.5">{d}</div>
           ))}
         </div>
         <div className="mt-1 grid grid-cols-7 gap-1.5">
           {dias.map((d, i) => {
             if (!d) return <div key={i} className="aspect-square" />;
-            const cor = corDoDia(d, cfg);
+            const turma = turmaDoDia(d);
             const isHoje = sameDay(d, hoje);
-            const cls = cor ? CORES_CLASSES[cor] : null;
+            const cls = turma ? TURMAS_CLASSES[turma] : null;
             return (
               <button
                 key={i}
@@ -223,10 +219,8 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
                 } ${isHoje ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
               >
                 <span>{d.getDate()}</span>
-                {cor && (
-                  <span
-                    className={`absolute bottom-1.5 h-1 w-1 rounded-full ${cls!.dot}`}
-                  />
+                {turma && (
+                  <span className={`absolute bottom-1.5 h-1 w-1 rounded-full ${cls!.dot}`} />
                 )}
               </button>
             );
@@ -240,8 +234,8 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
           Próximos dias
         </div>
         <div className="space-y-2">
-          {proximos.slice(1).map(({ data, cor }) => {
-            const cls = cor ? CORES_CLASSES[cor] : null;
+          {proximos.slice(1).map(({ data, turma }) => {
+            const cls = turma ? TURMAS_CLASSES[turma] : null;
             return (
               <div
                 key={data.toISOString()}
@@ -260,17 +254,15 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
                       })}
                     </div>
                     <div className="truncate text-xs text-muted-foreground">
-                      {cor
-                        ? cfg.grupos[cor].pessoas.join(", ") || "Sem pessoas"
-                        : "—"}
+                      {turma ? (pessoas[turma].join(", ") || "Sem pessoas") : "—"}
                     </div>
                   </div>
                 </div>
-                {cor && (
+                {turma && (
                   <span
-                    className={`shrink-0 rounded-full border ${cls!.border} ${cls!.bg} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${cls!.text}`}
+                    className={`shrink-0 rounded-full border ${cls!.border} ${cls!.bg} px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${cls!.text}`}
                   >
-                    {CORES_LABEL[cor]}
+                    {TURMAS_LABEL[turma]}
                   </span>
                 )}
               </div>
@@ -279,10 +271,7 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
         </div>
       </Panel>
 
-      <Dialog
-        open={!!selecionado}
-        onOpenChange={(o) => !o && setSelecionado(null)}
-      >
+      <Dialog open={!!selecionado} onOpenChange={(o) => !o && setSelecionado(null)}>
         <DialogContent className="rounded-3xl border-border/70">
           <DialogHeader>
             <DialogTitle className="capitalize">
@@ -294,14 +283,12 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
               })}
             </DialogTitle>
           </DialogHeader>
-          {corSel && selecionado ? (
+          {turmaSel && selecionado ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <span
-                  className={`h-3 w-3 rounded-full ${CORES_CLASSES[corSel].dot} shadow-[0_0_14px_currentColor]`}
-                />
-                <span className={`text-xl font-black ${CORES_CLASSES[corSel].text}`}>
-                  Folga {CORES_LABEL[corSel]}
+                <span className={`h-3 w-3 rounded-full ${TURMAS_CLASSES[turmaSel].dot} shadow-[0_0_14px_currentColor]`} />
+                <span className={`text-xl font-black ${TURMAS_CLASSES[turmaSel].text}`}>
+                  Folga {TURMAS_LABEL[turmaSel]}
                 </span>
               </div>
               <div>
@@ -309,16 +296,14 @@ export function CalendarioView({ cfg }: { cfg: Config }) {
                   De folga
                 </div>
                 <div className="mt-1 text-sm">
-                  {cfg.grupos[corSel].pessoas.length > 0
-                    ? cfg.grupos[corSel].pessoas.join(", ")
+                  {pessoas[turmaSel].length > 0
+                    ? pessoas[turmaSel].join(", ")
                     : "Nenhuma pessoa cadastrada"}
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Ninguém de folga nesse dia.
-            </p>
+            <p className="text-sm text-muted-foreground">Ninguém de folga nesse dia.</p>
           )}
         </DialogContent>
       </Dialog>

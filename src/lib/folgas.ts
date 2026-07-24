@@ -1,85 +1,86 @@
-export type CorFolga = "azul" | "roxa" | "amarela" | "vermelha";
+// Turmas do calendário (conforme a legenda do calendário 2026)
+// A = Vermelha  · B = Amarela  · C = Ciano  · D = Roxa
+export type Turma = "A" | "B" | "C" | "D";
 
-export const CORES: CorFolga[] = ["azul", "roxa", "amarela", "vermelha"];
+export const TURMAS: Turma[] = ["A", "B", "C", "D"];
 
-export const CORES_LABEL: Record<CorFolga, string> = {
-  azul: "Azul",
-  roxa: "Roxa",
-  amarela: "Amarela",
-  vermelha: "Vermelha",
+export const TURMAS_LABEL: Record<Turma, string> = {
+  A: "Turma A",
+  B: "Turma B",
+  C: "Turma C",
+  D: "Turma D",
 };
 
-export const CORES_CLASSES: Record<
-  CorFolga,
-  { bg: string; text: string; border: string; dot: string }
+export const TURMAS_CLASSES: Record<
+  Turma,
+  { bg: string; text: string; border: string; dot: string; solid: string }
 > = {
-  azul: {
-    bg: "bg-folga-azul/10",
-    text: "text-folga-azul",
-    border: "border-folga-azul/50",
-    dot: "bg-folga-azul text-folga-azul",
+  A: {
+    bg: "bg-turma-a/15",
+    text: "text-turma-a",
+    border: "border-turma-a/50",
+    dot: "bg-turma-a text-turma-a",
+    solid: "bg-turma-a",
   },
-  roxa: {
-    bg: "bg-folga-roxa/10",
-    text: "text-folga-roxa",
-    border: "border-folga-roxa/50",
-    dot: "bg-folga-roxa text-folga-roxa",
+  B: {
+    bg: "bg-turma-b/15",
+    text: "text-turma-b",
+    border: "border-turma-b/50",
+    dot: "bg-turma-b text-turma-b",
+    solid: "bg-turma-b",
   },
-  amarela: {
-    bg: "bg-folga-amarela/10",
-    text: "text-folga-amarela",
-    border: "border-folga-amarela/50",
-    dot: "bg-folga-amarela text-folga-amarela",
+  C: {
+    bg: "bg-turma-c/15",
+    text: "text-turma-c",
+    border: "border-turma-c/50",
+    dot: "bg-turma-c text-turma-c",
+    solid: "bg-turma-c",
   },
-  vermelha: {
-    bg: "bg-folga-vermelha/10",
-    text: "text-folga-vermelha",
-    border: "border-folga-vermelha/50",
-    dot: "bg-folga-vermelha text-folga-vermelha",
+  D: {
+    bg: "bg-turma-d/15",
+    text: "text-turma-d",
+    border: "border-turma-d/50",
+    dot: "bg-turma-d text-turma-d",
+    solid: "bg-turma-d",
   },
 };
 
-export type GrupoConfig = {
-  pessoas: string[];
-  /** ISO yyyy-mm-dd de um dia conhecido de folga */
-  ancora: string;
+/* ================== Pessoas por turma ==================
+ * Edite aqui os nomes.
+ */
+const STORAGE_KEY = "folgas-pessoas-v2";
+
+export type Pessoas = Record<Turma, string[]>;
+
+const PESSOAS_DEFAULT: Pessoas = {
+  A: [],
+  B: [],
+  C: [],
+  D: [],
 };
 
-export type Config = {
-  intervalo: number; // dias entre folgas
-  grupos: Record<CorFolga, GrupoConfig>;
-};
-
-const STORAGE_KEY = "folgas-config-v1";
-
-export function carregarConfig(): Config | null {
-  if (typeof window === "undefined") return null;
+export function carregarPessoas(): Pessoas {
+  if (typeof window === "undefined") return PESSOAS_DEFAULT;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Config;
-    if (!parsed?.grupos || !parsed?.intervalo) return null;
-    return parsed;
+    if (!raw) return PESSOAS_DEFAULT;
+    const p = JSON.parse(raw) as Pessoas;
+    return {
+      A: p.A ?? [],
+      B: p.B ?? [],
+      C: p.C ?? [],
+      D: p.D ?? [],
+    };
   } catch {
-    return null;
+    return PESSOAS_DEFAULT;
   }
 }
 
-export function salvarConfig(cfg: Config) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+export function salvarPessoas(p: Pessoas) {
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
 }
 
-export function limparConfig() {
-  window.localStorage.removeItem(STORAGE_KEY);
-}
-
-/** Diferença em dias inteiros entre duas datas (ignora hora/timezone) */
-function diffDias(a: Date, b: Date): number {
-  const ms = 24 * 60 * 60 * 1000;
-  const ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
-  const ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-  return Math.round((ua - ub) / ms);
-}
+/* ================== Datas ================== */
 
 export function parseIsoLocal(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
@@ -93,25 +94,54 @@ export function toIsoLocal(d: Date): string {
   return `${y}-${m}-${dd}`;
 }
 
-export function corDoDia(dia: Date, cfg: Config): CorFolga | null {
-  for (const cor of CORES) {
-    const g = cfg.grupos[cor];
-    if (!g?.ancora) continue;
-    const anc = parseIsoLocal(g.ancora);
-    const diff = diffDias(dia, anc);
-    const mod = ((diff % cfg.intervalo) + cfg.intervalo) % cfg.intervalo;
-    if (mod === 0) return cor;
-  }
-  return null;
+/* ================== Escala 2026 (extraída do calendário) ==================
+ * Cada mês é uma string de 28-31 caracteres (A/B/C/D), um por dia.
+ */
+const ESCALA_2026: Record<number, string> = {
+  1:  "DDAABBCADDCABBCCDBDAABBCBDAABBC",
+  2:  "CDDACBBACDDAABBCCDBAADBCCDDA",
+  3:  "ABBCADDCABBCCDDAABBCCCDAABBCCDD",
+  4:  "AABBCCDDAABBCCDDAABBCCDDAABBCC",
+  5:  "DDAABBCCDDAABDCCBDAABBCCDDAABBC",
+  6:  "CDDAABBCCDBAADBCCDDAABBCADDCABB",
+  7:  "BCCDDAABDCCBDAABBCCDDACBBACDDAA",
+  8:  "BBCCDDAABBCCDDAABBCADDAABBCDDDA",
+  9:  "ABBCCDDAABBCCDDACBBACDDAABBCCD",
+  10: "DAABBCCDDAABBCADDCABBCCDDAABBCC",
+  11: "DDAABBCCDDACBBACDDAABBCCDDAABB",
+  12: "CCDDAABBCADDCABBCCDDAABDCCBDAAB",
+};
+
+/** Ciclo padrão de 8 dias (fallback fora de 2026). */
+const CICLO = ["A", "A", "B", "B", "C", "C", "D", "D"] as const;
+// Âncora: Abril/2026 tem o ciclo puro (1/4 = A). Contamos a partir daí.
+const ANCORA = new Date(2026, 3, 1); // 2026-04-01 (mês 3 = abril)
+
+function diffDias(a: Date, b: Date): number {
+  const ms = 24 * 60 * 60 * 1000;
+  const ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+  const ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((ua - ub) / ms);
 }
 
-export function proximosDias(cfg: Config, n = 7, base = new Date()) {
+export function turmaDoDia(dia: Date): Turma | null {
+  if (dia.getFullYear() === 2026) {
+    const m = ESCALA_2026[dia.getMonth() + 1];
+    const ch = m?.[dia.getDate() - 1];
+    if (ch === "A" || ch === "B" || ch === "C" || ch === "D") return ch;
+  }
+  const diff = diffDias(dia, ANCORA);
+  const idx = ((diff % 8) + 8) % 8;
+  return CICLO[idx] as Turma;
+}
+
+export function proximosDias(n = 7, base = new Date()) {
   const start = new Date(base.getFullYear(), base.getMonth(), base.getDate());
-  const out: { data: Date; cor: CorFolga | null }[] = [];
+  const out: { data: Date; turma: Turma | null }[] = [];
   for (let i = 0; i < n; i++) {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
-    out.push({ data: d, cor: corDoDia(d, cfg) });
+    out.push({ data: d, turma: turmaDoDia(d) });
   }
   return out;
 }
