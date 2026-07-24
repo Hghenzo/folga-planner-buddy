@@ -59,6 +59,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-folga-azul: var(--folga-azul);
+  --color-folga-roxa: var(--folga-roxa);
+  --color-folga-amarela: var(--folga-amarela);
+  --color-folga-vermelha: var(--folga-vermelha);
 }
 
 :root {
@@ -95,6 +99,10 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  --folga-azul: oklch(0.58 0.18 250);
+  --folga-roxa: oklch(0.55 0.22 300);
+  --folga-amarela: oklch(0.72 0.16 85);
+  --folga-vermelha: oklch(0.6 0.22 25);
 }
 
 .dark {
