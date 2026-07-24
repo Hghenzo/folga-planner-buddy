@@ -1,36 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ConfigForm } from "@/components/config-form";
-import { carregarConfig, type Config } from "@/lib/folgas";
+import { carregarPessoas, type Pessoas } from "@/lib/folgas";
 
 export const Route = createFileRoute("/configuracoes")({
   head: () => ({
     meta: [
-      { title: "Configurações — Folgas" },
+      { title: "Pessoas por turma — Escala de Folgas" },
       {
         name: "description",
-        content:
-          "Configure as pessoas de cada folga (azul, roxa, amarela, vermelha), o intervalo do ciclo e a data de referência.",
+        content: "Cadastre os nomes das pessoas de cada turma (A, B, C e D).",
       },
-      { property: "og:title", content: "Configurações — Folgas" },
-      {
-        property: "og:description",
-        content: "Ajuste grupos, intervalo e datas de referência do calendário de folgas.",
-      },
+      { property: "og:title", content: "Pessoas por turma" },
+      { property: "og:description", content: "Cadastre os nomes por turma." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ConfigPage,
 });
 
 function ConfigPage() {
-  const [cfg, setCfg] = useState<Config | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [pessoas, setPessoas] = useState<Pessoas | null>(null);
 
   useEffect(() => {
-    setCfg(carregarConfig());
-    setLoaded(true);
+    setPessoas(carregarPessoas());
   }, []);
 
-  if (!loaded) return null;
-  return <ConfigForm inicial={cfg} />;
+  if (!pessoas) return null;
+  return <ConfigForm inicial={pessoas} />;
 }
