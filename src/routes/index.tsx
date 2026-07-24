@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
+import { CalendarDays } from "lucide-react";
 import { CalendarioView } from "@/components/calendario-view";
 import { carregarConfig, type Config } from "@/lib/folgas";
 
@@ -38,19 +38,24 @@ function Index() {
 
   if (!cfg) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
-        <Card className="w-full">
-          <CardContent className="space-y-4 p-6">
-            <h1 className="text-2xl font-bold">Bem-vindo!</h1>
-            <p className="text-sm text-muted-foreground">
-              Antes de começar, configure as pessoas de cada folga e uma data de
-              referência.
-            </p>
-            <Link to="/configuracoes">
-              <Button className="w-full">Configurar folgas</Button>
-            </Link>
-          </CardContent>
-        </Card>
+      <div className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
+        <div className="w-full rounded-3xl border border-border/70 bg-[image:var(--gradient-card)] p-6 shadow-[var(--shadow-card)]">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[image:var(--gradient-primary)] shadow-[var(--shadow-glow)]">
+            <CalendarDays className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <h1 className="mt-4 bg-[image:var(--gradient-primary)] bg-clip-text text-2xl font-black text-transparent">
+            Bem-vindo!
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Antes de começar, configure as pessoas de cada folga e uma data de
+            referência.
+          </p>
+          <Link to="/configuracoes">
+            <Button className="mt-5 h-12 w-full rounded-2xl bg-[image:var(--gradient-primary)] text-base font-bold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95">
+              Configurar folgas
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }

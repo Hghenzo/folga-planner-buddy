@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChevronLeft, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   CORES,
@@ -29,6 +29,16 @@ function emptyGrupos() {
       return acc;
     },
     {} as Config["grupos"],
+  );
+}
+
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={`rounded-3xl border border-border/70 bg-[image:var(--gradient-card)] shadow-[var(--shadow-card)] ${className}`}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -73,49 +83,59 @@ export function ConfigForm({ inicial, onSalvar }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-4 pb-24">
-      <div>
-        <h1 className="text-2xl font-bold">Configurar folgas</h1>
-        <p className="text-sm text-muted-foreground">
-          Configure o intervalo do ciclo, as pessoas de cada cor e uma data de
-          referência (uma folga conhecida de cada grupo).
-        </p>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-5 p-4 pb-24 sm:p-6">
+      <Panel className="p-4 sm:p-5">
+        <div className="flex items-center gap-3">
+          <Link to="/">
+            <Button variant="ghost" size="icon" className="rounded-2xl border border-border/70 bg-card/60">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="min-w-0">
+            <h1 className="bg-[image:var(--gradient-primary)] bg-clip-text text-xl font-black text-transparent">
+              Configurar folgas
+            </h1>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              Pessoas · Intervalo · Datas de referência
+            </p>
+          </div>
+        </div>
+      </Panel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ciclo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Label htmlFor="intervalo">Intervalo entre folgas (dias)</Label>
-          <Input
-            id="intervalo"
-            type="number"
-            min={1}
-            max={30}
-            value={intervalo}
-            onChange={(e) => setIntervalo(Number(e.target.value))}
-            className="mt-2 w-32"
-          />
-          <p className="mt-2 text-xs text-muted-foreground">
-            Escala 6x1 = 6. Escala semanal fixa = 7.
-          </p>
-        </CardContent>
-      </Card>
+      <Panel className="p-4 sm:p-5">
+        <Label htmlFor="intervalo" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Intervalo do ciclo (dias)
+        </Label>
+        <Input
+          id="intervalo"
+          type="number"
+          min={1}
+          max={30}
+          value={intervalo}
+          onChange={(e) => setIntervalo(Number(e.target.value))}
+          className="mt-2 h-11 w-32 rounded-xl border-border/70 bg-input/60 text-lg font-bold"
+        />
+        <p className="mt-2 text-xs text-muted-foreground">
+          Escala 6x1 = 6. Semanal fixa = 7.
+        </p>
+      </Panel>
 
       {CORES.map((cor) => {
         const cls = CORES_CLASSES[cor];
         return (
-          <Card key={cor} className={`border-2 ${cls.border}`}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className={`h-4 w-4 rounded-full ${cls.dot}`} />
+          <Panel key={cor} className="p-4 sm:p-5">
+            <div className="flex items-center gap-2">
+              <span className={`h-3 w-3 rounded-full ${cls.dot} shadow-[0_0_14px_currentColor]`} />
+              <span className={`text-lg font-black ${cls.text}`}>
                 Folga {CORES_LABEL[cor]}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </span>
+            </div>
+            <div className="mt-4 space-y-4">
               <div>
-                <Label htmlFor={`pessoas-${cor}`}>
+                <Label
+                  htmlFor={`pessoas-${cor}`}
+                  className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
                   Pessoas (separadas por vírgula)
                 </Label>
                 <Input
@@ -125,11 +145,14 @@ export function ConfigForm({ inicial, onSalvar }: Props) {
                     setPessoasInput((p) => ({ ...p, [cor]: e.target.value }))
                   }
                   placeholder="João, Maria, Pedro"
-                  className="mt-2"
+                  className="mt-2 h-11 rounded-xl border-border/70 bg-input/60"
                 />
               </div>
               <div>
-                <Label htmlFor={`ancora-${cor}`}>
+                <Label
+                  htmlFor={`ancora-${cor}`}
+                  className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
                   Data de referência (uma folga conhecida)
                 </Label>
                 <Input
@@ -142,15 +165,15 @@ export function ConfigForm({ inicial, onSalvar }: Props) {
                       [cor]: { ...g[cor], ancora: e.target.value },
                     }))
                   }
-                  className="mt-2 w-full"
+                  className="mt-2 h-11 w-full rounded-xl border-border/70 bg-input/60"
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </Panel>
         );
       })}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="grid grid-cols-[auto_1fr] items-center gap-3">
         <Button
           variant="ghost"
           onClick={() => {
@@ -160,10 +183,17 @@ export function ConfigForm({ inicial, onSalvar }: Props) {
               navigate({ to: "/" });
             }
           }}
+          className="rounded-2xl text-destructive hover:bg-destructive/10 hover:text-destructive"
         >
+          <Trash2 className="mr-2 h-4 w-4" />
           Apagar tudo
         </Button>
-        <Button disabled={!podeSalvar} onClick={handleSalvar}>
+        <Button
+          disabled={!podeSalvar}
+          onClick={handleSalvar}
+          className="h-12 rounded-2xl bg-[image:var(--gradient-primary)] text-base font-bold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95"
+        >
+          <Save className="mr-2 h-4 w-4" />
           Salvar
         </Button>
       </div>
