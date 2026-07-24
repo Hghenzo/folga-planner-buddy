@@ -14,28 +14,28 @@ export const CORES_CLASSES: Record<
   { bg: string; text: string; border: string; dot: string }
 > = {
   azul: {
-    bg: "bg-folga-azul/15",
+    bg: "bg-folga-azul/10",
     text: "text-folga-azul",
-    border: "border-folga-azul/40",
-    dot: "bg-folga-azul",
+    border: "border-folga-azul/50",
+    dot: "bg-folga-azul text-folga-azul",
   },
   roxa: {
-    bg: "bg-folga-roxa/15",
+    bg: "bg-folga-roxa/10",
     text: "text-folga-roxa",
-    border: "border-folga-roxa/40",
-    dot: "bg-folga-roxa",
+    border: "border-folga-roxa/50",
+    dot: "bg-folga-roxa text-folga-roxa",
   },
   amarela: {
-    bg: "bg-folga-amarela/20",
+    bg: "bg-folga-amarela/10",
     text: "text-folga-amarela",
-    border: "border-folga-amarela/40",
-    dot: "bg-folga-amarela",
+    border: "border-folga-amarela/50",
+    dot: "bg-folga-amarela text-folga-amarela",
   },
   vermelha: {
-    bg: "bg-folga-vermelha/15",
+    bg: "bg-folga-vermelha/10",
     text: "text-folga-vermelha",
-    border: "border-folga-vermelha/40",
-    dot: "bg-folga-vermelha",
+    border: "border-folga-vermelha/50",
+    dot: "bg-folga-vermelha text-folga-vermelha",
   },
 };
 
