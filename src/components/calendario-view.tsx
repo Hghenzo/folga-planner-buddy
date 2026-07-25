@@ -113,7 +113,7 @@ export function CalendarioView() {
               </p>
             </div>
           </div>
-          <Link to="/configuracoes" search={{}} params={{}}>
+          <Link to="/configuracoes">
             <Button
               variant="ghost"
               size="icon"
