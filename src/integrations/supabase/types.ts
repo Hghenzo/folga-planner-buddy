@@ -14,13 +14,155 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pessoas_turma: {
+        Row: {
+          nomes: string[]
+          turma: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          nomes?: string[]
+          turma: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          nomes?: string[]
+          turma?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      planejamento_codigos: {
+        Row: {
+          codigo: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          permissao: string
+          planejamento_id: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          permissao: string
+          planejamento_id: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          permissao?: string
+          planejamento_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planejamento_codigos_planejamento_id_fkey"
+            columns: ["planejamento_id"]
+            isOneToOne: false
+            referencedRelation: "planejamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planejamento_shares: {
+        Row: {
+          created_at: string
+          permissao: string
+          planejamento_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          permissao: string
+          planejamento_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          permissao?: string
+          planejamento_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planejamento_shares_planejamento_id_fkey"
+            columns: ["planejamento_id"]
+            isOneToOne: false
+            referencedRelation: "planejamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planejamentos: {
+        Row: {
+          created_at: string
+          data: string
+          esteira: Json
+          id: string
+          nome: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          esteira?: Json
+          id?: string
+          nome: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          esteira?: Json
+          id?: string
+          nome?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_edit_planejamento: {
+        Args: { _pid: string; _uid: string }
+        Returns: boolean
+      }
+      can_view_planejamento: {
+        Args: { _pid: string; _uid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
