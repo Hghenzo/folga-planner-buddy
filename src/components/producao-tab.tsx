@@ -215,6 +215,7 @@ function EquipeCard() {
             await salvar({ data: { nome: valor } });
             qc.invalidateQueries({ queryKey: ["equipe"] });
             qc.invalidateQueries({ queryKey: ["ranking-equipes"] });
+      qc.invalidateQueries({ queryKey: ["avaliacoes"] });
             toast.success("Equipe salva");
           }}
         >
@@ -288,7 +289,8 @@ function ImportarCard() {
       const r = await importar({ data: { data, conteudo: conteudo || undefined, imagens } });
       qc.invalidateQueries({ queryKey: ["producao"] });
       qc.invalidateQueries({ queryKey: ["ranking-equipes"] });
-      toast.success(`${r.linhas} pessoas importadas`);
+      qc.invalidateQueries({ queryKey: ["avaliacoes"] });
+      toast.success(`${r.linhas} pessoas importadas · ${r.atualizados} cartinha(s) atualizada(s)`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao importar");
     } finally {
@@ -417,6 +419,7 @@ function LancamentoManual({
               });
               qc.invalidateQueries({ queryKey: ["producao"] });
               qc.invalidateQueries({ queryKey: ["ranking-equipes"] });
+      qc.invalidateQueries({ queryKey: ["avaliacoes"] });
               toast.success("Lançamento salvo");
               onOpenChange(false);
             }}
