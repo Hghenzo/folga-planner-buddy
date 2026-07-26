@@ -165,8 +165,6 @@ export function ProducaoTab() {
           <RankingPessoas totais={totais} carregando={isLoading} />
         </TabsContent>
       </Tabs>
-
-      <RankingEquipesCard />
     </div>
   );
 }
@@ -487,7 +485,7 @@ function RankingPessoas({ totais, carregando }: { totais: Total[]; carregando: b
   );
 }
 
-function RankingEquipesCard() {
+export function RankingEquipesCard() {
   const [p, setP] = useState<Periodo | "geral">("semana");
   const range = useMemo(() => intervalo(p === "geral" ? "ano" : p), [p]);
   const ranking = useServerFn(rankingEquipes);
