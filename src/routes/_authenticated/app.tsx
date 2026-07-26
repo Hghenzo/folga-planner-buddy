@@ -36,7 +36,7 @@ import {
 } from "@/lib/planejamentos.functions";
 import { distribuirNomes, esteiraVazia, normalizarEsteira } from "@/lib/esteira";
 import { AvaliacoesTab } from "@/components/avaliacoes-tab";
-import { ProducaoTab } from "@/components/producao-tab";
+import { ProducaoTab, RankingEquipesCard } from "@/components/producao-tab";
 
 
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
@@ -60,7 +60,7 @@ function AppHome() {
     <div className="mx-auto max-w-3xl space-y-4 p-4 pb-24 sm:p-6">
       <Header />
       <Tabs defaultValue="planejamentos" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 rounded-2xl bg-card/60">
+        <TabsList className="grid w-full grid-cols-6 rounded-2xl bg-card/60">
           <TabsTrigger value="planejamentos" className="rounded-xl text-[11px]">
             Planos
           </TabsTrigger>
@@ -75,6 +75,9 @@ function AppHome() {
           </TabsTrigger>
           <TabsTrigger value="producao" className="rounded-xl text-[11px]">
             Produção
+          </TabsTrigger>
+          <TabsTrigger value="ranking" className="rounded-xl text-[11px]">
+            Ranking
           </TabsTrigger>
         </TabsList>
         <TabsContent value="planejamentos">
@@ -91,6 +94,9 @@ function AppHome() {
         </TabsContent>
         <TabsContent value="producao">
           <ProducaoTab />
+        </TabsContent>
+        <TabsContent value="ranking">
+          <RankingEquipesCard />
         </TabsContent>
 
       </Tabs>
@@ -254,7 +260,7 @@ function NovoPlanejamentoDialog() {
   const [open, setOpen] = useState(false);
   const [nome, setNome] = useState("");
   const [data, setData] = useState(() => new Date().toISOString().slice(0, 10));
-  const [autoDistribuir, setAutoDistribuir] = useState(true);
+  const [autoDistribuir, setAutoDistribuir] = useState(false);
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -386,6 +392,7 @@ function EsteiraPreview() {
     try {
       const r = await criar({ data: { nome: `Escala ${hojeIso}`, data: hojeIso, esteira: e } });
       qc.invalidateQueries({ queryKey: ["planejamentos"] });
+      setE(esteiraVazia());
       toast.success("Planejamento salvo");
       navigate({ to: "/planejamentos/$id", params: { id: r.id } });
     } catch (err) {
