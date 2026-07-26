@@ -86,9 +86,21 @@ function agregar(linhas: LinhaProducao[]): Total[] {
     m.set(k, t);
   }
   return [...m.values()]
-    .map((t) => ({ ...t, utilizacao: t.dias ? Math.round(t.utilizacao / t.dias) : 0 }))
-    .sort((a, b) => b.unidades - a.unidades || b.efetiva - a.efetiva);
+    .map((t) => ({
+      ...t,
+      // médias diárias por pessoa
+      efetiva: t.dias ? t.efetiva / t.dias : 0,
+      liquida: t.dias ? t.liquida / t.dias : 0,
+      ocioso: t.dias ? t.ocioso / t.dias : 0,
+      utilizacao: t.dias ? Math.round(t.utilizacao / t.dias) : 0,
+    }))
+    .sort((a, b) => b.efetiva - a.efetiva || b.unidades - a.unidades);
 }
+
+function media(v: number[]) {
+  return v.length ? v.reduce((s, x) => s + x, 0) / v.length : 0;
+}
+
 
 function fileToDataUrl(f: File) {
   return new Promise<string>((res, rej) => {
