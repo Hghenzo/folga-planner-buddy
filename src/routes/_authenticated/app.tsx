@@ -36,6 +36,8 @@ import {
 } from "@/lib/planejamentos.functions";
 import { distribuirNomes, esteiraVazia, normalizarEsteira } from "@/lib/esteira";
 import { AvaliacoesTab } from "@/components/avaliacoes-tab";
+import { ProducaoTab } from "@/components/producao-tab";
+
 
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
 
