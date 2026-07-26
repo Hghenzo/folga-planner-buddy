@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      avaliacoes: {
+        Row: {
+          created_at: string
+          expedicao: number
+          goleiro: number
+          id: string
+          inducao: number
+          montagem: number
+          nome: string
+          pesca: number
+          separacao_rk: number
+          turma: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expedicao?: number
+          goleiro?: number
+          id?: string
+          inducao?: number
+          montagem?: number
+          nome: string
+          pesca?: number
+          separacao_rk?: number
+          turma?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expedicao?: number
+          goleiro?: number
+          id?: string
+          inducao?: number
+          montagem?: number
+          nome?: string
+          pesca?: number
+          separacao_rk?: number
+          turma?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pessoas_turma: {
         Row: {
           nomes: string[]
@@ -126,6 +171,48 @@ export type Database = {
           nome?: string
           owner_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      produtividade: {
+        Row: {
+          created_at: string
+          data: string
+          id: string
+          montagens: number
+          nome: string
+          produtividade_efetiva: number
+          produtividade_liquida: number
+          tempo_min: number
+          tempo_ocioso: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          id?: string
+          montagens?: number
+          nome: string
+          produtividade_efetiva?: number
+          produtividade_liquida?: number
+          tempo_min?: number
+          tempo_ocioso?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          id?: string
+          montagens?: number
+          nome?: string
+          produtividade_efetiva?: number
+          produtividade_liquida?: number
+          tempo_min?: number
+          tempo_ocioso?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

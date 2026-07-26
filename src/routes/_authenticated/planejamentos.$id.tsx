@@ -15,9 +15,10 @@ import {
 } from "@/lib/planejamentos.functions";
 import {
   distribuirNomes,
-  esteiraVazia,
+  normalizarEsteira,
   type EsteiraState,
 } from "@/lib/esteira";
+
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
 
 export const Route = createFileRoute("/_authenticated/planejamentos/$id")({
@@ -58,8 +59,9 @@ function PlanoDetalhe() {
 
   // hidrata
   if (data && !esteira) {
-    setEsteira((data.esteira as EsteiraState) ?? esteiraVazia());
+    setEsteira(normalizarEsteira(data.esteira));
   }
+
 
   async function salvarAgora() {
     if (!esteira) return;
@@ -89,17 +91,19 @@ function PlanoDetalhe() {
     setDirty(true);
   }
 
-  const disponiveis = (() => {
-    if (!data || !pessoas) return [];
+  const { disponiveis, emFolga } = (() => {
+    if (!data || !pessoas) return { disponiveis: [] as string[], emFolga: [] as string[] };
     const dia = new Date(data.data + "T00:00:00");
     const turmaFolga = turmaDoDia(dia);
     const out: string[] = [];
+    const folga: string[] = [];
     for (const t of TURMAS) {
-      if (t === turmaFolga) continue;
-      out.push(...(pessoas[t] ?? []));
+      if (t === turmaFolga) folga.push(...(pessoas[t] ?? []));
+      else out.push(...(pessoas[t] ?? []));
     }
-    return out;
+    return { disponiveis: out, emFolga: folga };
   })();
+
 
   if (isLoading || !data || !esteira) {
     return (
@@ -159,11 +163,14 @@ function PlanoDetalhe() {
       <EsteiraBoard
         value={esteira}
         readOnly={readOnly}
+        disponiveis={disponiveis}
+        emFolga={emFolga}
         onChange={(e) => {
           setEsteira(e);
           setDirty(true);
         }}
       />
+
 
       {!readOnly && (
         <ChatIA

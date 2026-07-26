@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronLeft, Save } from "lucide-react";
 import { toast } from "sonner";
+import { salvarPessoas as salvarPessoasCloud } from "@/lib/planejamentos.functions";
 import {
   TURMAS,
   TURMAS_CLASSES,
   TURMAS_LABEL,
   type Turma,
   type Pessoas,
-  salvarPessoas,
 } from "@/lib/folgas";
 
 type Props = { inicial: Pessoas };
@@ -28,6 +30,9 @@ function Panel({ children, className = "" }: { children: React.ReactNode; classN
 
 export function ConfigForm({ inicial }: Props) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const salvar = useServerFn(salvarPessoasCloud);
+  const [salvando, setSalvando] = useState(false);
   const [texto, setTexto] = useState<Record<Turma, string>>(() =>
     TURMAS.reduce((acc, t) => {
       acc[t] = inicial[t].join(", ");
@@ -35,21 +40,30 @@ export function ConfigForm({ inicial }: Props) {
     }, {} as Record<Turma, string>),
   );
 
-  function handleSalvar() {
+  async function handleSalvar() {
     const p = TURMAS.reduce((acc, t) => {
       acc[t] = texto[t].split(",").map((s) => s.trim()).filter(Boolean);
       return acc;
     }, {} as Pessoas);
-    salvarPessoas(p);
-    toast.success("Nomes salvos!");
-    navigate({ to: "/" });
+    setSalvando(true);
+    try {
+      await salvar({ data: { pessoas: p } });
+      qc.invalidateQueries({ queryKey: ["pessoas"] });
+      toast.success("Nomes salvos na sua conta!");
+      navigate({ to: "/app" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao salvar");
+    } finally {
+      setSalvando(false);
+    }
   }
+
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 p-4 pb-24 sm:p-6">
       <Panel className="p-4 sm:p-5">
         <div className="flex items-center gap-3">
-          <Link to="/">
+          <Link to="/app">
             <Button variant="ghost" size="icon" className="rounded-2xl border border-border/70 bg-card/60">
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -94,6 +108,8 @@ export function ConfigForm({ inicial }: Props) {
 
       <Button
         onClick={handleSalvar}
+        disabled={salvando}
+
         className="h-12 w-full rounded-2xl bg-[image:var(--gradient-primary)] text-base font-bold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95"
       >
         <Save className="mr-2 h-4 w-4" />

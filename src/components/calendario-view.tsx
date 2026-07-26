@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,16 +10,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CalendarDays, ChevronLeft, ChevronRight, Settings, Users } from "lucide-react";
+import { obterPessoas } from "@/lib/planejamentos.functions";
 import {
   TURMAS,
   TURMAS_CLASSES,
   TURMAS_LABEL,
   type Turma,
   type Pessoas,
-  carregarPessoas,
   turmaDoDia,
   proximosDias,
 } from "@/lib/folgas";
+
 
 const DIAS_SEMANA = ["D", "S", "T", "Q", "Q", "S", "S"];
 const MESES = [
@@ -65,11 +68,13 @@ export function CalendarioView() {
     () => new Date(hoje.getFullYear(), hoje.getMonth(), 1),
   );
   const [selecionado, setSelecionado] = useState<Date | null>(null);
-  const [pessoas, setPessoas] = useState<Pessoas>({ A: [], B: [], C: [], D: [] });
+  const getPessoas = useServerFn(obterPessoas);
+  const { data: pessoasData } = useQuery({
+    queryKey: ["pessoas"],
+    queryFn: () => getPessoas(),
+  });
+  const pessoas: Pessoas = pessoasData ?? { A: [], B: [], C: [], D: [] };
 
-  useEffect(() => {
-    setPessoas(carregarPessoas());
-  }, []);
 
   const dias = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);

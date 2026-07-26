@@ -31,9 +31,12 @@ import {
   excluirPlanejamento,
   listarPlanejamentos,
   obterPessoas,
+  obterPlanejamento,
   usarCodigoAcesso,
 } from "@/lib/planejamentos.functions";
-import { distribuirNomes, esteiraVazia } from "@/lib/esteira";
+import { distribuirNomes, esteiraVazia, normalizarEsteira } from "@/lib/esteira";
+import { AvaliacoesTab } from "@/components/avaliacoes-tab";
+
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -55,15 +58,18 @@ function AppHome() {
     <div className="mx-auto max-w-3xl space-y-4 p-4 pb-24 sm:p-6">
       <Header />
       <Tabs defaultValue="planejamentos" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-card/60">
-          <TabsTrigger value="planejamentos" className="rounded-xl">
-            Planejamentos
+        <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-card/60">
+          <TabsTrigger value="planejamentos" className="rounded-xl text-xs">
+            Planos
           </TabsTrigger>
-          <TabsTrigger value="calendario" className="rounded-xl">
+          <TabsTrigger value="calendario" className="rounded-xl text-xs">
             Calendário
           </TabsTrigger>
-          <TabsTrigger value="esteira" className="rounded-xl">
+          <TabsTrigger value="esteira" className="rounded-xl text-xs">
             Esteira
+          </TabsTrigger>
+          <TabsTrigger value="avaliacao" className="rounded-xl text-xs">
+            Avaliação
           </TabsTrigger>
         </TabsList>
         <TabsContent value="planejamentos">
@@ -75,7 +81,11 @@ function AppHome() {
         <TabsContent value="esteira">
           <EsteiraPreview />
         </TabsContent>
+        <TabsContent value="avaliacao">
+          <AvaliacoesTab />
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }
@@ -158,6 +168,7 @@ function PlanejamentosLista() {
     }
   }
 
+
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
@@ -179,6 +190,9 @@ function PlanejamentosLista() {
           </Button>
         </div>
       </div>
+
+      <SugestaoHoje planos={planos} />
+
 
       {isLoading && (
         <div className="rounded-2xl border border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
@@ -324,14 +338,132 @@ function NovoPlanejamentoDialog() {
   );
 }
 
+/** Nomes que trabalham e nomes de folga em um dia. */
+export function usarEscalaDoDia(iso: string) {
+  const getPessoas = useServerFn(obterPessoas);
+  const { data: pessoas } = useQuery({ queryKey: ["pessoas"], queryFn: () => getPessoas() });
+  const dia = new Date(iso + "T00:00:00");
+  const turmaFolga = turmaDoDia(dia);
+  const disponiveis: string[] = [];
+  const emFolga: string[] = [];
+  for (const t of TURMAS) {
+    const lista = pessoas?.[t] ?? [];
+    if (t === turmaFolga) emFolga.push(...lista);
+    else disponiveis.push(...lista);
+  }
+  return { disponiveis, emFolga, turmaFolga };
+}
+
 function EsteiraPreview() {
+  const hojeIso = new Date().toISOString().slice(0, 10);
   const [e, setE] = useState(esteiraVazia());
+  const { disponiveis, emFolga, turmaFolga } = usarEscalaDoDia(hojeIso);
   return (
     <div className="space-y-3">
       <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-4 text-center text-xs text-muted-foreground">
-        Prévia da esteira. Para salvar, crie um <b>planejamento</b>.
+        Prévia da esteira (folga de hoje: <b>Turma {turmaFolga ?? "—"}</b>). Para salvar, crie um{" "}
+        <b>planejamento</b>.
       </div>
-      <EsteiraBoard value={e} onChange={setE} />
+      <EsteiraBoard
+        value={e}
+        onChange={setE}
+        disponiveis={disponiveis}
+        emFolga={emFolga}
+      />
+    </div>
+  );
+}
+
+
+type PlanoResumo = { id: string; nome: string; data: string };
+
+function isoDe(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
+/** Sugestão automática: um planejamento novo por dia, reaproveitando o do dia anterior
+ *  quando a folga é da mesma turma dois dias seguidos. */
+function SugestaoHoje({ planos }: { planos: PlanoResumo[] }) {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const criar = useServerFn(criarPlanejamento);
+  const obter = useServerFn(obterPlanejamento);
+  const [loading, setLoading] = useState(false);
+
+  const hoje = new Date();
+  const ontem = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 1);
+  const isoHoje = isoDe(hoje);
+  const isoOntem = isoDe(ontem);
+  const turmaHoje = turmaDoDia(hoje);
+  const turmaOntem = turmaDoDia(ontem);
+  const mesmaFolga = turmaHoje != null && turmaHoje === turmaOntem;
+  const planoHoje = planos.find((p) => p.data === isoHoje);
+  const planoOntem = planos.find((p) => p.data === isoOntem);
+  const { disponiveis } = usarEscalaDoDia(isoHoje);
+
+  async function gerar() {
+    setLoading(true);
+    try {
+      let esteira = esteiraVazia();
+      if (mesmaFolga && planoOntem) {
+        const anterior = await obter({ data: { id: planoOntem.id } });
+        esteira = normalizarEsteira(anterior.esteira);
+      } else {
+        esteira = distribuirNomes(esteira, disponiveis);
+      }
+      const r = await criar({
+        data: { nome: `Escala ${isoHoje}`, data: isoHoje, esteira },
+      });
+      qc.invalidateQueries({ queryKey: ["planejamentos"] });
+      navigate({ to: "/planejamentos/$id", params: { id: r.id } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (planoHoje) {
+    return (
+      <div className="flex items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/50 p-3 text-xs text-muted-foreground">
+        <span>
+          Planejamento de hoje já criado · folga <b>Turma {turmaHoje ?? "—"}</b>
+        </span>
+        <Link to="/planejamentos/$id" params={{ id: planoHoje.id }}>
+          <Button size="sm" variant="outline" className="h-8 rounded-lg text-xs">
+            Abrir
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-brand-cyan/40 bg-brand-cyan/5 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-xs font-black uppercase tracking-widest text-brand-cyan">
+            Sugestão de hoje
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            Folga da Turma {turmaHoje ?? "—"}
+            {mesmaFolga && planoOntem
+              ? " · segundo dia da mesma folga: vou copiar o planejamento de ontem"
+              : " · vou distribuir quem está trabalhando"}
+          </div>
+        </div>
+        <Button
+          onClick={gerar}
+          disabled={loading}
+          size="sm"
+          className="h-9 shrink-0 rounded-xl bg-[image:var(--gradient-primary)] text-xs text-primary-foreground"
+        >
+          <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Gerar
+        </Button>
+      </div>
     </div>
   );
 }
