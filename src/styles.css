@@ -101,12 +101,30 @@
   --brand-cyan: oklch(0.82 0.14 200);
   --brand-purple: oklch(0.65 0.22 300);
 
+  --brand-cyan: oklch(0.82 0.14 200);
+  --brand-purple: oklch(0.65 0.22 300);
+
+  --neon-red: oklch(0.68 0.25 22);
+  --neon-yellow: oklch(0.88 0.19 100);
+  --neon-green: oklch(0.85 0.24 145);
+
+  /* Cartas estilo FIFA */
+  --card-bronze: linear-gradient(160deg, oklch(0.62 0.1 55), oklch(0.42 0.08 45) 55%, oklch(0.55 0.09 50));
+  --card-bronze-fg: oklch(0.98 0.01 60);
+  --card-silver: linear-gradient(160deg, oklch(0.9 0.01 250), oklch(0.7 0.015 250) 55%, oklch(0.85 0.01 250));
+  --card-silver-fg: oklch(0.22 0.02 260);
+  --card-gold: linear-gradient(160deg, oklch(0.92 0.14 95), oklch(0.78 0.15 78) 55%, oklch(0.88 0.13 90));
+  --card-gold-fg: oklch(0.25 0.05 70);
+  --card-icon: linear-gradient(160deg, oklch(0.97 0.05 100), oklch(0.86 0.09 95) 50%, oklch(0.95 0.04 100));
+  --card-icon-fg: oklch(0.24 0.04 80);
+
   --gradient-primary: linear-gradient(135deg, oklch(0.82 0.14 200), oklch(0.65 0.22 300));
   --gradient-card: linear-gradient(180deg, oklch(0.23 0.035 260), oklch(0.19 0.03 260));
   --gradient-page: radial-gradient(ellipse at top, oklch(0.22 0.06 280) 0%, oklch(0.14 0.03 260) 55%);
   --shadow-glow: 0 0 40px oklch(0.78 0.15 210 / 0.18);
   --shadow-card: 0 4px 30px oklch(0.05 0.02 260 / 0.5);
 }
+
 
 @layer base {
   * {
