@@ -232,38 +232,82 @@ export function EsteiraBoard({
     upd({ ...e, ilhas: { ...e.ilhas, [id]: s } });
   }
 
+  function ListaSlots({
+    titulo,
+    label,
+    valores,
+    onList,
+    cols = 2,
+  }: {
+    titulo?: string;
+    label: string;
+    valores: string[];
+    onList: (v: string[]) => void;
+    cols?: number;
+  }) {
+    return (
+      <div>
+        {titulo && (
+          <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
+            {titulo}
+          </div>
+        )}
+        <div className={cols === 2 ? "grid grid-cols-2 gap-2" : "space-y-2"}>
+          {valores.map((v, i) => (
+            <Slot
+              key={i}
+              label={valores.length > 1 ? `${label} ${i + 1}` : label}
+              ctx={ctx}
+              value={v}
+              disabled={readOnly}
+              onChange={(nv) => onList(valores.map((x, j) => (j === i ? nv : x)))}
+              onRemove={
+                valores.length > 1 ? () => onList(valores.filter((_, j) => j !== i)) : undefined
+              }
+            />
+          ))}
+        </div>
+        {!readOnly && (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => onList([...valores, ""])}
+            className="mt-1.5 h-7 w-full rounded-md border border-dashed border-border/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
+          >
+            <Plus className="mr-1 h-3 w-3" /> {label}
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       {/* INDUÇÃO + ONDA NEGRA em cima */}
       <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
-        <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
-          Indução
-        </div>
-        <Slot
+        <ListaSlots
+          titulo="Indução"
           label="Indutor"
-          ctx={ctx}
-          value={e.inducao}
-          disabled={readOnly}
-          onChange={(v) => upd({ ...e, inducao: v })}
+          valores={e.inducao}
+          onList={(v) => upd({ ...e, inducao: v })}
         />
         <div className="mt-3 rounded-xl border border-dashed border-brand-purple/60 bg-brand-purple/5 p-3">
           <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
             Onda Negra
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Slot
+            <ListaSlots
               label="Pesca"
-              ctx={ctx}
-              value={e.onda_negra.pesca}
-              disabled={readOnly}
-              onChange={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, pesca: v } })}
+              cols={1}
+              valores={e.onda_negra.pesca}
+              onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, pesca: v } })}
             />
-            <Slot
+            <ListaSlots
               label="Monta"
-              ctx={ctx}
-              value={e.onda_negra.monta}
-              disabled={readOnly}
-              onChange={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, monta: v } })}
+              cols={1}
+              valores={e.onda_negra.monta}
+              onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, monta: v } })}
             />
           </div>
         </div>
@@ -310,24 +354,10 @@ export function EsteiraBoard({
         <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-cyan">
           Goleiro
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Slot
-            label="Goleiro 1"
-            ctx={ctx}
-            value={e.goleiros[0]}
-            disabled={readOnly}
-            onChange={(v) => upd({ ...e, goleiros: [v, e.goleiros[1]] })}
-          />
-          <Slot
-            label="Goleiro 2"
-            ctx={ctx}
-            value={e.goleiros[1]}
-            disabled={readOnly}
-            onChange={(v) => upd({ ...e, goleiros: [e.goleiros[0], v] })}
-          />
-        </div>
+        <ListaSlots label="Goleiro" valores={e.goleiros} onList={(v) => upd({ ...e, goleiros: v })} />
       </div>
     </div>
   );
 }
+
 
