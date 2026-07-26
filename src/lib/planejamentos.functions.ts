@@ -151,8 +151,9 @@ export const compartilharPorEmail = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .single();
     if (!p || p.owner_id !== userId) throw new Error("Sem permissão");
-    // Busca user por email via profiles
-    const { data: prof } = await supabase
+    // Busca user por email via profiles (perfis não são legíveis por todos)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin
       .from("profiles")
       .select("id")
       .eq("email", data.email.toLowerCase())
