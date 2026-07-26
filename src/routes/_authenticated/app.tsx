@@ -33,7 +33,9 @@ import {
   obterPessoas,
   usarCodigoAcesso,
 } from "@/lib/planejamentos.functions";
-import { distribuirNomes, esteiraVazia } from "@/lib/esteira";
+import { distribuirNomes, esteiraVazia, normalizarEsteira } from "@/lib/esteira";
+import { AvaliacoesTab } from "@/components/avaliacoes-tab";
+
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
 
 export const Route = createFileRoute("/_authenticated/app")({
