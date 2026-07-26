@@ -16,14 +16,17 @@ import {
 } from "@/components/ui/dialog";
 import { Upload, Plus, Trophy, Users, Loader2, Save } from "lucide-react";
 import {
+  META_PRODUTIVIDADE,
   importarProducao,
   listarProducao,
   obterEquipe,
   rankingEquipes,
   salvarEquipe,
   salvarLancamento,
+  sincronizarMontagem,
   type LinhaProducao,
 } from "@/lib/producao.functions";
+
 
 type Periodo = "semana" | "mes" | "ano";
 
