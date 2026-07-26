@@ -25,15 +25,25 @@ const LABEL: Record<Categoria, string> = {
   expedicao: "Expedição",
 };
 
+const SIGLA: Record<Categoria, string> = {
+  pesca: "PES",
+  inducao: "IND",
+  goleiro: "GOL",
+  montagem: "MON",
+  separacao_rk: "RK",
+  expedicao: "EXP",
+};
+
 function overall(a: Avaliacao) {
   return Math.round(CATEGORIAS.reduce((s, c) => s + (a[c] ?? 0), 0) / CATEGORIAS.length);
 }
 
-function corNota(n: number) {
-  if (n >= 85) return "text-turma-c";
-  if (n >= 70) return "text-turma-b";
-  if (n >= 50) return "text-foreground";
-  return "text-destructive";
+/** Tier estilo FIFA de acordo com o overall */
+function tier(ov: number) {
+  if (ov >= 85) return { bg: "var(--card-icon)", fg: "var(--card-icon-fg)", nome: "Icon" };
+  if (ov >= 75) return { bg: "var(--card-gold)", fg: "var(--card-gold-fg)", nome: "Ouro" };
+  if (ov >= 65) return { bg: "var(--card-silver)", fg: "var(--card-silver-fg)", nome: "Prata" };
+  return { bg: "var(--card-bronze)", fg: "var(--card-bronze-fg)", nome: "Bronze" };
 }
 
 function Carta({ a }: { a: Avaliacao }) {
@@ -46,6 +56,7 @@ function Carta({ a }: { a: Avaliacao }) {
   const ov = edit
     ? Math.round(CATEGORIAS.reduce((s, c) => s + (vals[c] || 0), 0) / CATEGORIAS.length)
     : overall(a);
+  const t = tier(ov);
 
   async function persistir() {
     try {
@@ -59,41 +70,61 @@ function Carta({ a }: { a: Avaliacao }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3 shadow-[var(--shadow-card)]">
-      <div className="flex items-center gap-3">
-        <div className={`text-3xl font-black leading-none ${corNota(ov)}`}>{ov}</div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-bold">{a.nome}</div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+    <div
+      className="relative overflow-hidden rounded-[1.75rem] p-4 shadow-[var(--shadow-card)] ring-1 ring-black/10"
+      style={{ backgroundImage: t.bg, color: t.fg }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-5xl font-black leading-none tracking-tight">{ov}</div>
+          <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.25em] opacity-70">
+            Overall · {t.nome}
+          </div>
+          <div className="mt-3 truncate text-xl font-black leading-tight">{a.nome}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-60">
             {a.turma ? `Turma ${a.turma}` : "sem turma"}
           </div>
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => (edit ? persistir() : setEdit(true))}
-          className="h-8 rounded-lg border border-border/60 text-xs"
-        >
-          {edit ? <Save className="h-3.5 w-3.5" /> : "Editar"}
-        </Button>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          {a.turma && (
+            <div className="grid h-11 w-11 place-items-center rounded-full bg-black/15 text-xs font-black">
+              T{a.turma}
+            </div>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => (edit ? persistir() : setEdit(true))}
+            className="h-7 rounded-full bg-black/15 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-black/25"
+            style={{ color: t.fg }}
+          >
+            {edit ? <Save className="h-3.5 w-3.5" /> : "Editar"}
+          </Button>
+        </div>
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-1.5">
+
+      <div className="mt-4 h-px w-full bg-current opacity-20" />
+
+      <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5">
         {CATEGORIAS.map((c) => (
-          <div key={c} className="rounded-lg border border-border/50 bg-card/50 px-2 py-1">
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{LABEL[c]}</div>
+          <div key={c} className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-widest opacity-70">
+              {SIGLA[c]}
+            </span>
             {edit ? (
               <Input
                 type="number"
                 min={0}
                 max={100}
                 value={vals[c]}
-                onChange={(e) =>
-                  setVals((v) => ({ ...v, [c]: Math.max(0, Math.min(100, Number(e.target.value) || 0)) }))
+                onChange={(ev) =>
+                  setVals((v) => ({ ...v, [c]: Math.max(0, Math.min(100, Number(ev.target.value) || 0)) }))
                 }
-                className="h-7 rounded-md bg-input/40 px-1.5 text-xs"
+                className="h-7 w-16 rounded-md border-black/20 bg-black/10 px-1.5 text-right text-xs font-bold"
+                style={{ color: t.fg }}
               />
             ) : (
-              <div className={`text-sm font-black ${corNota(a[c])}`}>{a[c]}</div>
+              <span className="text-sm font-black tabular-nums">{a[c]}</span>
             )}
           </div>
         ))}
@@ -101,6 +132,7 @@ function Carta({ a }: { a: Avaliacao }) {
     </div>
   );
 }
+
 
 export function AvaliacoesTab() {
   const qc = useQueryClient();
