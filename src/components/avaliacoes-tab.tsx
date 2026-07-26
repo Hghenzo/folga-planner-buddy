@@ -16,14 +16,6 @@ import {
   type Categoria,
 } from "@/lib/avaliacoes.functions";
 
-const LABEL: Record<Categoria, string> = {
-  pesca: "Pesca",
-  inducao: "Indução",
-  goleiro: "Goleiro",
-  montagem: "Montagem",
-  separacao_rk: "Sep. RK",
-  expedicao: "Expedição",
-};
 
 const SIGLA: Record<Categoria, string> = {
   pesca: "PES",
