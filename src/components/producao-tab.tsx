@@ -185,39 +185,86 @@ function Resumo({ titulo, valor }: { titulo: string; valor: number }) {
 function EquipeCard() {
   const obter = useServerFn(obterEquipe);
   const salvar = useServerFn(salvarEquipe);
+  const sincronizar = useServerFn(sincronizarMontagem);
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["equipe"], queryFn: () => obter({}) });
   const [nome, setNome] = useState<string | null>(null);
+  const [base, setBase] = useState<"meta" | "media">("meta");
+  const [sync, setSync] = useState(false);
   const valor = nome ?? data?.nome ?? "";
 
   return (
-    <div className="flex items-end gap-2 rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
-      <div className="flex-1">
-        <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          Nome da minha equipe
-        </Label>
-        <Input
-          value={valor}
-          onChange={(e) => setNome(e.target.value)}
-          placeholder="Ex.: Turma da Madrugada"
-          className="mt-1 h-9 rounded-xl text-sm"
-        />
+    <div className="space-y-2 rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            Nome da minha equipe
+          </Label>
+          <Input
+            value={valor}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Ex.: Turma da Madrugada"
+            className="mt-1 h-9 rounded-xl text-sm"
+          />
+        </div>
+        <Button
+          variant="outline"
+          className="h-9 rounded-xl"
+          onClick={async () => {
+            if (!valor.trim()) return toast.error("Informe o nome da equipe");
+            await salvar({ data: { nome: valor } });
+            qc.invalidateQueries({ queryKey: ["equipe"] });
+            qc.invalidateQueries({ queryKey: ["ranking-equipes"] });
+            toast.success("Equipe salva");
+          }}
+        >
+          <Save className="mr-1 h-4 w-4" /> Salvar
+        </Button>
       </div>
-      <Button
-        variant="outline"
-        className="h-9 rounded-xl"
-        onClick={async () => {
-          if (!valor.trim()) return toast.error("Informe o nome da equipe");
-          await salvar({ data: { nome: valor } });
-          qc.invalidateQueries({ queryKey: ["equipe"] });
-          toast.success("Equipe salva");
-        }}
-      >
-        <Save className="mr-1 h-4 w-4" /> Salvar
-      </Button>
+
+      <div className="flex items-center gap-2">
+        <div className="flex flex-1 gap-1 rounded-xl border border-border/50 bg-card/50 p-1">
+          {(["meta", "media"] as const).map((k) => (
+            <button
+              key={k}
+              onClick={() => setBase(k)}
+              className={`flex-1 rounded-lg px-2 py-1 text-[10px] font-bold uppercase ${
+                base === k ? "bg-brand-cyan/20 text-brand-cyan" : "text-muted-foreground"
+              }`}
+            >
+              {k === "meta" ? `Meta ${META_PRODUTIVIDADE}` : "Média da equipe"}
+            </button>
+          ))}
+        </div>
+        <Button
+          variant="outline"
+          disabled={sync}
+          className="h-9 rounded-xl"
+          onClick={async () => {
+            setSync(true);
+            try {
+              const r = await sincronizar({ data: { base } });
+              qc.invalidateQueries({ queryKey: ["avaliacoes"] });
+              toast.success(`${r.atualizados} cartinha(s) sincronizada(s)`);
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Falha ao sincronizar");
+            } finally {
+              setSync(false);
+            }
+          }}
+        >
+          {sync ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+          Sincronizar cartinhas
+        </Button>
+      </div>
+      <p className="text-[10px] text-muted-foreground">
+        A nota de montagem da cartinha é calculada pela produtividade efetiva média
+        {base === "meta" ? ` sobre a meta ${META_PRODUTIVIDADE}` : " comparada à média da equipe"}.
+      </p>
     </div>
   );
 }
+
 
 function ImportarCard() {
   const hoje = iso(new Date());
