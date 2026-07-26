@@ -143,16 +143,21 @@ export function ProducaoTab() {
           <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Período
+                Média da equipe
               </div>
               <div className="text-xs font-semibold capitalize text-foreground">{range.rotulo}</div>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <Resumo titulo="Unidades" valor={totais.reduce((s, t) => s + t.unidades, 0)} />
-              <Resumo titulo="Prod. efetiva" valor={totais.reduce((s, t) => s + t.efetiva, 0)} />
+            <div className="grid grid-cols-4 gap-2 text-center">
+              <Resumo titulo="Efetiva" valor={media(totais.map((t) => t.efetiva))} />
+              <Resumo titulo="Líquida" valor={media(totais.map((t) => t.liquida))} />
+              <Resumo titulo="Util. %" valor={media(totais.map((t) => t.utilizacao))} />
               <Resumo titulo="Pessoas" valor={totais.length} />
             </div>
+            <p className="mt-2 text-center text-[10px] text-muted-foreground">
+              Médias por pessoa · meta {META_PRODUTIVIDADE} de produtividade efetiva
+            </p>
           </div>
+
 
           <RankingPessoas totais={totais} carregando={isLoading} />
         </TabsContent>
