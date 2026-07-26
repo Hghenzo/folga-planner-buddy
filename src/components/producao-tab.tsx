@@ -438,13 +438,21 @@ function RankingPessoas({ totais, carregando }: { totais: Total[]; carregando: b
 }
 
 function RankingEquipesCard() {
-  const [p, setP] = useState<Periodo>("semana");
-  const range = useMemo(() => intervalo(p), [p]);
+  const [p, setP] = useState<Periodo | "geral">("semana");
+  const range = useMemo(() => intervalo(p === "geral" ? "ano" : p), [p]);
   const ranking = useServerFn(rankingEquipes);
   const { data = [] } = useQuery({
-    queryKey: ["ranking-equipes", range.de, range.ate],
-    queryFn: () => ranking({ data: { de: range.de, ate: range.ate } }),
+    queryKey: ["ranking-equipes", p, range.de, range.ate],
+    queryFn: () =>
+      ranking({
+        data:
+          p === "geral"
+            ? { escopo: "geral" as const }
+            : { escopo: "periodo" as const, de: range.de, ate: range.ate },
+      }),
   });
+
+  const rotulos = { semana: "Semanal", mes: "Mensal", geral: "Geral" } as const;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-brand-cyan/40 bg-[image:var(--gradient-card)]">
@@ -454,7 +462,7 @@ function RankingEquipesCard() {
           <span className="text-xs font-black uppercase tracking-wider">Ranking de equipes</span>
         </div>
         <div className="flex gap-1">
-          {(["semana", "mes"] as const).map((k) => (
+          {(["semana", "mes", "geral"] as const).map((k) => (
             <button
               key={k}
               onClick={() => setP(k)}
@@ -462,7 +470,7 @@ function RankingEquipesCard() {
                 p === k ? "bg-brand-cyan/20 text-brand-cyan" : "text-muted-foreground"
               }`}
             >
-              {k === "semana" ? "Semanal" : "Mensal"}
+              {rotulos[k]}
             </button>
           ))}
         </div>
@@ -486,17 +494,18 @@ function RankingEquipesCard() {
                   {e.equipe} {e.minha && <span className="text-[10px] text-brand-cyan">(você)</span>}
                 </div>
                 <div className="text-[10px] text-muted-foreground">
-                  {e.lancamentos} lançamentos · utilização {e.utilizacao}%
+                  {e.pessoas} pessoas · utilização {e.utilizacao}%
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm font-black">{e.unidades.toLocaleString("pt-BR")}</div>
-                <div className="text-[10px] text-muted-foreground">unidades</div>
+                <div className="text-sm font-black">{e.efetivaMedia.toLocaleString("pt-BR")}</div>
+                <div className="text-[10px] text-muted-foreground">efetiva média</div>
               </div>
             </li>
           ))}
         </ul>
       )}
     </div>
+
   );
 }
