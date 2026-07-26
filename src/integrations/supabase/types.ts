@@ -242,14 +242,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_edit_planejamento: {
-        Args: { _pid: string; _uid: string }
-        Returns: boolean
-      }
-      can_view_planejamento: {
-        Args: { _pid: string; _uid: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
