@@ -219,7 +219,8 @@ export const importarProducao = createServerFn({ method: "POST" })
       .from("produtividade")
       .upsert(rows, { onConflict: "user_id,nome,data" });
     if (error) throw new Error(error.message);
-    return { linhas: rows.length };
+    const atualizados = await sincronizarNotas(supabase, userId, "meta");
+    return { linhas: rows.length, atualizados };
   });
 
 // -------------------- Sincronizar cartinhas (nota de montagem) --------------------
