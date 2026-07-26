@@ -59,6 +59,27 @@ export type Database = {
         }
         Relationships: []
       }
+      equipes: {
+        Row: {
+          created_at: string
+          nome: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          nome: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          nome?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pessoas_turma: {
         Row: {
           nomes: string[]
@@ -185,8 +206,10 @@ export type Database = {
           produtividade_liquida: number
           tempo_min: number
           tempo_ocioso: number
+          unidades: number
           updated_at: string
           user_id: string
+          utilizacao: number
         }
         Insert: {
           created_at?: string
@@ -198,8 +221,10 @@ export type Database = {
           produtividade_liquida?: number
           tempo_min?: number
           tempo_ocioso?: number
+          unidades?: number
           updated_at?: string
           user_id: string
+          utilizacao?: number
         }
         Update: {
           created_at?: string
@@ -211,8 +236,10 @@ export type Database = {
           produtividade_liquida?: number
           tempo_min?: number
           tempo_ocioso?: number
+          unidades?: number
           updated_at?: string
           user_id?: string
+          utilizacao?: number
         }
         Relationships: []
       }
