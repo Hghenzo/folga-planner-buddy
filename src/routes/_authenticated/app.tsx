@@ -36,6 +36,8 @@ import {
 } from "@/lib/planejamentos.functions";
 import { distribuirNomes, esteiraVazia, normalizarEsteira } from "@/lib/esteira";
 import { AvaliacoesTab } from "@/components/avaliacoes-tab";
+import { ProducaoTab } from "@/components/producao-tab";
+
 
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
 
@@ -58,18 +60,21 @@ function AppHome() {
     <div className="mx-auto max-w-3xl space-y-4 p-4 pb-24 sm:p-6">
       <Header />
       <Tabs defaultValue="planejamentos" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-card/60">
-          <TabsTrigger value="planejamentos" className="rounded-xl text-xs">
+        <TabsList className="grid w-full grid-cols-5 rounded-2xl bg-card/60">
+          <TabsTrigger value="planejamentos" className="rounded-xl text-[11px]">
             Planos
           </TabsTrigger>
-          <TabsTrigger value="calendario" className="rounded-xl text-xs">
+          <TabsTrigger value="calendario" className="rounded-xl text-[11px]">
             Calendário
           </TabsTrigger>
-          <TabsTrigger value="esteira" className="rounded-xl text-xs">
+          <TabsTrigger value="esteira" className="rounded-xl text-[11px]">
             Esteira
           </TabsTrigger>
-          <TabsTrigger value="avaliacao" className="rounded-xl text-xs">
+          <TabsTrigger value="avaliacao" className="rounded-xl text-[11px]">
             Avaliação
+          </TabsTrigger>
+          <TabsTrigger value="producao" className="rounded-xl text-[11px]">
+            Produção
           </TabsTrigger>
         </TabsList>
         <TabsContent value="planejamentos">
@@ -84,6 +89,10 @@ function AppHome() {
         <TabsContent value="avaliacao">
           <AvaliacoesTab />
         </TabsContent>
+        <TabsContent value="producao">
+          <ProducaoTab />
+        </TabsContent>
+
       </Tabs>
 
     </div>
