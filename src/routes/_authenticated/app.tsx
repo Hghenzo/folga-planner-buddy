@@ -357,12 +357,55 @@ export function usarEscalaDoDia(iso: string) {
 function EsteiraPreview() {
   const hojeIso = new Date().toISOString().slice(0, 10);
   const [e, setE] = useState(esteiraVazia());
+  const [salvando, setSalvando] = useState(false);
   const { disponiveis, emFolga, turmaFolga } = usarEscalaDoDia(hojeIso);
+  const criar = useServerFn(criarPlanejamento);
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+
+  function gerar() {
+    if (!disponiveis.length) {
+      toast.error("Cadastre os nomes das turmas em Configurações");
+      return;
+    }
+    setE(distribuirNomes(esteiraVazia(), disponiveis));
+    toast.success("Planejamento gerado");
+  }
+
+  async function salvar() {
+    setSalvando(true);
+    try {
+      const r = await criar({ data: { nome: `Escala ${hojeIso}`, data: hojeIso, esteira: e } });
+      qc.invalidateQueries({ queryKey: ["planejamentos"] });
+      toast.success("Planejamento salvo");
+      navigate({ to: "/planejamentos/$id", params: { id: r.id } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   return (
     <div className="space-y-3">
       <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-4 text-center text-xs text-muted-foreground">
-        Prévia da esteira (folga de hoje: <b>Turma {turmaFolga ?? "—"}</b>). Para salvar, crie um{" "}
-        <b>planejamento</b>.
+        Prévia da esteira (folga de hoje: <b>Turma {turmaFolga ?? "—"}</b>).
+      </div>
+      <div className="flex gap-2">
+        <Button
+          onClick={gerar}
+          className="h-11 flex-1 rounded-xl bg-[image:var(--gradient-primary)] font-bold text-primary-foreground"
+        >
+          <Sparkles className="mr-2 h-4 w-4" /> Gerar planejamento
+        </Button>
+        <Button
+          onClick={salvar}
+          disabled={salvando}
+          variant="outline"
+          className="h-11 rounded-xl"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Salvar
+        </Button>
       </div>
       <EsteiraBoard
         value={e}
@@ -373,6 +416,7 @@ function EsteiraPreview() {
     </div>
   );
 }
+
 
 
 type PlanoResumo = { id: string; nome: string; data: string };
