@@ -52,14 +52,17 @@ function PlanoDetalhe() {
   });
 
   const [esteira, setEsteira] = useState<EsteiraState | null>(null);
+  const [hidratadoId, setHidratadoId] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const readOnly = data ? data.permissao === "view" : true;
 
-  // hidrata
-  if (data && !esteira) {
+  // hidrata (e reseta ao trocar de planejamento)
+  if (data && hidratadoId !== id) {
     setEsteira(normalizarEsteira(data.esteira));
+    setHidratadoId(id);
+    setDirty(false);
   }
 
 

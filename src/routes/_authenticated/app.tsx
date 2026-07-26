@@ -260,7 +260,7 @@ function NovoPlanejamentoDialog() {
   const [open, setOpen] = useState(false);
   const [nome, setNome] = useState("");
   const [data, setData] = useState(() => new Date().toISOString().slice(0, 10));
-  const [autoDistribuir, setAutoDistribuir] = useState(true);
+  const [autoDistribuir, setAutoDistribuir] = useState(false);
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
   const navigate = useNavigate();
