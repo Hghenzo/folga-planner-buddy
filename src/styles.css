@@ -52,6 +52,11 @@
 
   --color-brand-cyan: var(--brand-cyan);
   --color-brand-purple: var(--brand-purple);
+
+  --color-neon-red: var(--neon-red);
+  --color-neon-yellow: var(--neon-yellow);
+  --color-neon-green: var(--neon-green);
+
 }
 
 :root {
