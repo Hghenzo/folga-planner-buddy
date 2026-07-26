@@ -197,9 +197,11 @@ function IlhaCard({
             <Plus className="mr-1 h-3 w-3" /> Montador
           </Button>
         )}
+        </div>
       </div>
     </div>
   );
+
 }
 
 export function EsteiraBoard({
