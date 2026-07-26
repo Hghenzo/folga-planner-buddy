@@ -373,3 +373,96 @@ function EsteiraPreview() {
   );
 }
 
+
+type PlanoResumo = { id: string; nome: string; data: string };
+
+function isoDe(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
+/** Sugestão automática: um planejamento novo por dia, reaproveitando o do dia anterior
+ *  quando a folga é da mesma turma dois dias seguidos. */
+function SugestaoHoje({ planos }: { planos: PlanoResumo[] }) {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const criar = useServerFn(criarPlanejamento);
+  const obter = useServerFn(obterPlanejamento);
+  const [loading, setLoading] = useState(false);
+
+  const hoje = new Date();
+  const ontem = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 1);
+  const isoHoje = isoDe(hoje);
+  const isoOntem = isoDe(ontem);
+  const turmaHoje = turmaDoDia(hoje);
+  const turmaOntem = turmaDoDia(ontem);
+  const mesmaFolga = turmaHoje != null && turmaHoje === turmaOntem;
+  const planoHoje = planos.find((p) => p.data === isoHoje);
+  const planoOntem = planos.find((p) => p.data === isoOntem);
+  const { disponiveis } = usarEscalaDoDia(isoHoje);
+
+  async function gerar() {
+    setLoading(true);
+    try {
+      let esteira = esteiraVazia();
+      if (mesmaFolga && planoOntem) {
+        const anterior = await obter({ data: { id: planoOntem.id } });
+        esteira = normalizarEsteira(anterior.esteira);
+      } else {
+        esteira = distribuirNomes(esteira, disponiveis);
+      }
+      const r = await criar({
+        data: { nome: `Escala ${isoHoje}`, data: isoHoje, esteira },
+      });
+      qc.invalidateQueries({ queryKey: ["planejamentos"] });
+      navigate({ to: "/planejamentos/$id", params: { id: r.id } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (planoHoje) {
+    return (
+      <div className="flex items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/50 p-3 text-xs text-muted-foreground">
+        <span>
+          Planejamento de hoje já criado · folga <b>Turma {turmaHoje ?? "—"}</b>
+        </span>
+        <Link to="/planejamentos/$id" params={{ id: planoHoje.id }}>
+          <Button size="sm" variant="outline" className="h-8 rounded-lg text-xs">
+            Abrir
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-brand-cyan/40 bg-brand-cyan/5 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-xs font-black uppercase tracking-widest text-brand-cyan">
+            Sugestão de hoje
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            Folga da Turma {turmaHoje ?? "—"}
+            {mesmaFolga && planoOntem
+              ? " · segundo dia da mesma folga: vou copiar o planejamento de ontem"
+              : " · vou distribuir quem está trabalhando"}
+          </div>
+        </div>
+        <Button
+          onClick={gerar}
+          disabled={loading}
+          size="sm"
+          className="h-9 shrink-0 rounded-xl bg-[image:var(--gradient-primary)] text-xs text-primary-foreground"
+        >
+          <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Gerar
+        </Button>
+      </div>
+    </div>
+  );
+}
