@@ -31,6 +31,7 @@ import {
   excluirPlanejamento,
   listarPlanejamentos,
   obterPessoas,
+  obterPlanejamento,
   usarCodigoAcesso,
 } from "@/lib/planejamentos.functions";
 import { distribuirNomes, esteiraVazia, normalizarEsteira } from "@/lib/esteira";
