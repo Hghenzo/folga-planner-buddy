@@ -167,6 +167,7 @@ function PlanejamentosLista() {
     }
   }
 
+
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
@@ -188,6 +189,9 @@ function PlanejamentosLista() {
           </Button>
         </div>
       </div>
+
+      <SugestaoHoje planos={planos} />
+
 
       {isLoading && (
         <div className="rounded-2xl border border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
