@@ -221,38 +221,105 @@ export const importarProducao = createServerFn({ method: "POST" })
     return { linhas: rows.length };
   });
 
+// -------------------- Sincronizar cartinhas (nota de montagem) --------------------
+export const META_PRODUTIVIDADE = 350;
+
+async function sincronizarNotas(
+  supabase: { from: (t: string) => any },
+  userId: string,
+  base: "meta" | "media",
+) {
+  const { data: rows } = await supabase
+    .from("produtividade")
+    .select("nome, produtividade_efetiva")
+    .eq("user_id", userId)
+    .limit(20000);
+  if (!rows?.length) return 0;
+
+  const agg = new Map<string, { nome: string; soma: number; n: number }>();
+  for (const r of rows as { nome: string; produtividade_efetiva: number | null }[]) {
+    const k = r.nome.trim().toLowerCase();
+    const a = agg.get(k) ?? { nome: r.nome.trim(), soma: 0, n: 0 };
+    a.soma += Number(r.produtividade_efetiva ?? 0);
+    a.n += 1;
+    agg.set(k, a);
+  }
+  const medias = [...agg.values()].map((a) => ({ nome: a.nome, media: a.n ? a.soma / a.n : 0 }));
+  const mediaEquipe = medias.reduce((s, m) => s + m.media, 0) / (medias.length || 1);
+  const alvo = base === "media" ? Math.max(1, mediaEquipe) : META_PRODUTIVIDADE;
+
+  const { data: existentes } = await supabase
+    .from("avaliacoes")
+    .select("id, nome")
+    .eq("user_id", userId);
+  const mapaId = new Map(
+    ((existentes ?? []) as { id: string; nome: string }[]).map((e) => [e.nome.trim().toLowerCase(), e]),
+  );
+
+  const linhas = medias
+    .filter((m) => m.media > 0)
+    .map((m) => {
+      const nota = Math.max(0, Math.min(100, Math.round((m.media / alvo) * 100)));
+      const atual = mapaId.get(m.nome.toLowerCase());
+      return { user_id: userId, nome: atual?.nome ?? m.nome, montagem: nota };
+    });
+  if (!linhas.length) return 0;
+
+  const { error } = await supabase
+    .from("avaliacoes")
+    .upsert(linhas, { onConflict: "user_id,nome" });
+  if (error) throw new Error(error.message);
+  return linhas.length;
+}
+
+export const sincronizarMontagem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ base: z.enum(["meta", "media"]).default("meta") }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const atualizados = await sincronizarNotas(context.supabase, context.userId, data.base);
+    return { atualizados };
+  });
+
 // -------------------- Ranking público de equipes --------------------
 export const rankingEquipes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
-        de: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-        ate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        de: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        ate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        escopo: z.enum(["periodo", "geral"]).default("periodo"),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("produtividade")
-      .select("user_id, unidades, produtividade_efetiva, utilizacao")
-      .gte("data", data.de)
-      .lte("data", data.ate)
+      .select("user_id, nome, unidades, produtividade_efetiva, utilizacao")
       .limit(50000);
+    if (data.escopo === "periodo" && data.de && data.ate) {
+      q = q.gte("data", data.de).lte("data", data.ate);
+    }
+    const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
 
     const agg = new Map<
       string,
-      { unidades: number; efetiva: number; utilTotal: number; n: number }
+      { unidades: number; efetiva: number; utilTotal: number; n: number; pessoas: Set<string> }
     >();
     for (const r of rows ?? []) {
-      const a = agg.get(r.user_id) ?? { unidades: 0, efetiva: 0, utilTotal: 0, n: 0 };
+      const a =
+        agg.get(r.user_id) ??
+        { unidades: 0, efetiva: 0, utilTotal: 0, n: 0, pessoas: new Set<string>() };
       a.unidades += Number(r.unidades ?? 0);
       a.efetiva += Number(r.produtividade_efetiva ?? 0);
       a.utilTotal += Number(r.utilizacao ?? 0);
       a.n += 1;
+      a.pessoas.add(String(r.nome ?? "").trim().toLowerCase());
       agg.set(r.user_id, a);
     }
     if (!agg.size) return [];
@@ -265,16 +332,21 @@ export const rankingEquipes = createServerFn({ method: "POST" })
     const nomes = new Map((equipes ?? []).map((e) => [e.user_id, e.nome]));
 
     return ids
-      .map((id, i) => {
+      .map((id) => {
         const a = agg.get(id)!;
+        const pessoas = Math.max(1, a.pessoas.size);
         return {
-          equipe: nomes.get(id) ?? `Equipe ${i + 1}`,
+          equipe: (nomes.get(id) ?? "").trim() || "Equipe sem nome",
           minha: id === userId,
+          pessoas: a.pessoas.size,
           unidades: a.unidades,
           efetiva: Math.round(a.efetiva),
+          efetivaMedia: Math.round(a.efetiva / (a.n || 1)),
+          unidadesMedia: Math.round(a.unidades / pessoas),
           utilizacao: a.n ? Math.round(a.utilTotal / a.n) : 0,
           lancamentos: a.n,
         };
       })
-      .sort((a, b) => b.unidades - a.unidades || b.efetiva - a.efetiva);
+      .sort((a, b) => b.efetivaMedia - a.efetivaMedia || b.unidadesMedia - a.unidadesMedia);
   });
+
