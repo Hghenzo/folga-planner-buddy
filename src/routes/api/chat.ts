@@ -18,9 +18,9 @@ export const Route = createFileRoute("/api/chat")({
 
         const esteira = body.esteira ?? esteiraVazia();
         const sys = `Você é um assistente que edita um planejamento de esteira de trabalho.
-Estrutura da esteira (JSON): { ilhas: Record<string, { pescador, bipador_1, bipador_2 }>, goleiros: [g1, g2], inducao, onda_negra: { pesca, monta } }.
+Estrutura da esteira (JSON): { ilhas: Record<string, { pescador, bipador_1, bipador_2, montadores: string[] }>, goleiros: string[], inducao: string[], onda_negra: { pesca: string[], monta: string[] } }.
 IDs de ilhas válidos: ${TODAS_ILHAS.join(", ")}.
-Cada slot é uma string com um nome (vazio "" se desocupado).
+Cada slot de ilha é uma string com um nome (vazio "" se desocupado); goleiros, inducao e onda_negra são listas de nomes (podem ter quantas pessoas forem necessárias).
 Pessoas disponíveis: ${(body.disponiveis ?? []).join(", ") || "(nenhuma)"}.
 Esteira atual: ${JSON.stringify(esteira)}.
 
