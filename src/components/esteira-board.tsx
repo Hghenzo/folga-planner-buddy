@@ -234,67 +234,18 @@ export function EsteiraBoard({
 
   return (
     <div className="space-y-3">
-      {/* GOLEIRO em cima */}
+      {/* INDUÇÃO + ONDA NEGRA em cima */}
       <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
-        <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-cyan">
-          Goleiro
+        <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
+          Indução
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Slot
-            label="Goleiro 1"
-            ctx={ctx}
-            value={e.goleiros[0]}
-            disabled={readOnly}
-            onChange={(v) => upd({ ...e, goleiros: [v, e.goleiros[1]] })}
-          />
-          <Slot
-            label="Goleiro 2"
-            ctx={ctx}
-            value={e.goleiros[1]}
-            disabled={readOnly}
-            onChange={(v) => upd({ ...e, goleiros: [e.goleiros[0], v] })}
-          />
-        </div>
-      </div>
-
-      {/* Esteira principal */}
-      <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-2">
-            <div className="text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Esquerdo
-            </div>
-            {ILHAS_ESQ.map((id) => (
-              <IlhaCard
-                key={id}
-                id={id}
-                ctx={ctx}
-                slots={e.ilhas[id]}
-                onChange={(s) => updIlha(id, s)}
-                disabled={readOnly}
-                side="esq"
-              />
-            ))}
-          </div>
-          <div className="space-y-2">
-            <div className="text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Direito
-            </div>
-            {ILHAS_DIR.map((id) => (
-              <IlhaCard
-                key={id}
-                id={id}
-                ctx={ctx}
-                slots={e.ilhas[id]}
-                onChange={(s) => updIlha(id, s)}
-                disabled={readOnly}
-                side="dir"
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Onda Negra */}
+        <Slot
+          label="Indutor"
+          ctx={ctx}
+          value={e.inducao}
+          disabled={readOnly}
+          onChange={(v) => upd({ ...e, inducao: v })}
+        />
         <div className="mt-3 rounded-xl border border-dashed border-brand-purple/60 bg-brand-purple/5 p-3">
           <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
             Onda Negra
@@ -318,19 +269,65 @@ export function EsteiraBoard({
         </div>
       </div>
 
-      {/* INDUÇÃO embaixo */}
+      {/* Esteira principal */}
       <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
-        <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
-          Indução
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
+            <div className="text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Esquerdo
+            </div>
+            {ILHAS_ESQ.map((id) => (
+              <IlhaCard
+                key={id}
+                id={id}
+                ctx={ctx}
+                slots={e.ilhas[id]}
+                onChange={(s) => updIlha(id, s)}
+                disabled={readOnly}
+              />
+            ))}
+          </div>
+          <div className="space-y-2">
+            <div className="text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Direito
+            </div>
+            {ILHAS_DIR.map((id) => (
+              <IlhaCard
+                key={id}
+                id={id}
+                ctx={ctx}
+                slots={e.ilhas[id]}
+                onChange={(s) => updIlha(id, s)}
+                disabled={readOnly}
+              />
+            ))}
+          </div>
         </div>
-        <Slot
-          label="Indutor"
-          ctx={ctx}
-          value={e.inducao}
-          disabled={readOnly}
-          onChange={(v) => upd({ ...e, inducao: v })}
-        />
+      </div>
+
+      {/* GOLEIRO embaixo */}
+      <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
+        <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-cyan">
+          Goleiro
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Slot
+            label="Goleiro 1"
+            ctx={ctx}
+            value={e.goleiros[0]}
+            disabled={readOnly}
+            onChange={(v) => upd({ ...e, goleiros: [v, e.goleiros[1]] })}
+          />
+          <Slot
+            label="Goleiro 2"
+            ctx={ctx}
+            value={e.goleiros[1]}
+            disabled={readOnly}
+            onChange={(v) => upd({ ...e, goleiros: [e.goleiros[0], v] })}
+          />
+        </div>
       </div>
     </div>
   );
 }
+
