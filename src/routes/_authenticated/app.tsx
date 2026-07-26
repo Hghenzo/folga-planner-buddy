@@ -55,15 +55,18 @@ function AppHome() {
     <div className="mx-auto max-w-3xl space-y-4 p-4 pb-24 sm:p-6">
       <Header />
       <Tabs defaultValue="planejamentos" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-card/60">
-          <TabsTrigger value="planejamentos" className="rounded-xl">
-            Planejamentos
+        <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-card/60">
+          <TabsTrigger value="planejamentos" className="rounded-xl text-xs">
+            Planos
           </TabsTrigger>
-          <TabsTrigger value="calendario" className="rounded-xl">
+          <TabsTrigger value="calendario" className="rounded-xl text-xs">
             Calendário
           </TabsTrigger>
-          <TabsTrigger value="esteira" className="rounded-xl">
+          <TabsTrigger value="esteira" className="rounded-xl text-xs">
             Esteira
+          </TabsTrigger>
+          <TabsTrigger value="avaliacao" className="rounded-xl text-xs">
+            Avaliação
           </TabsTrigger>
         </TabsList>
         <TabsContent value="planejamentos">
@@ -75,7 +78,11 @@ function AppHome() {
         <TabsContent value="esteira">
           <EsteiraPreview />
         </TabsContent>
+        <TabsContent value="avaliacao">
+          <AvaliacoesTab />
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }
