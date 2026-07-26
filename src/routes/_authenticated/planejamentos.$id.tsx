@@ -163,11 +163,14 @@ function PlanoDetalhe() {
       <EsteiraBoard
         value={esteira}
         readOnly={readOnly}
+        disponiveis={disponiveis}
+        emFolga={emFolga}
         onChange={(e) => {
           setEsteira(e);
           setDirty(true);
         }}
       />
+
 
       {!readOnly && (
         <ChatIA
