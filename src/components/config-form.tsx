@@ -63,7 +63,7 @@ export function ConfigForm({ inicial }: Props) {
     <div className="mx-auto max-w-2xl space-y-5 p-4 pb-24 sm:p-6">
       <Panel className="p-4 sm:p-5">
         <div className="flex items-center gap-3">
-          <Link to="/">
+          <Link to="/app">
             <Button variant="ghost" size="icon" className="rounded-2xl border border-border/70 bg-card/60">
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -108,6 +108,8 @@ export function ConfigForm({ inicial }: Props) {
 
       <Button
         onClick={handleSalvar}
+        disabled={salvando}
+
         className="h-12 w-full rounded-2xl bg-[image:var(--gradient-primary)] text-base font-bold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95"
       >
         <Save className="mr-2 h-4 w-4" />
