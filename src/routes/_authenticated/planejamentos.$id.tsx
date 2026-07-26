@@ -15,9 +15,10 @@ import {
 } from "@/lib/planejamentos.functions";
 import {
   distribuirNomes,
-  esteiraVazia,
+  normalizarEsteira,
   type EsteiraState,
 } from "@/lib/esteira";
+
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
 
 export const Route = createFileRoute("/_authenticated/planejamentos/$id")({
@@ -58,8 +59,9 @@ function PlanoDetalhe() {
 
   // hidrata
   if (data && !esteira) {
-    setEsteira((data.esteira as EsteiraState) ?? esteiraVazia());
+    setEsteira(normalizarEsteira(data.esteira));
   }
+
 
   async function salvarAgora() {
     if (!esteira) return;
