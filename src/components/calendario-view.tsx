@@ -68,11 +68,13 @@ export function CalendarioView() {
     () => new Date(hoje.getFullYear(), hoje.getMonth(), 1),
   );
   const [selecionado, setSelecionado] = useState<Date | null>(null);
-  const [pessoas, setPessoas] = useState<Pessoas>({ A: [], B: [], C: [], D: [] });
+  const getPessoas = useServerFn(obterPessoas);
+  const { data: pessoasData } = useQuery({
+    queryKey: ["pessoas"],
+    queryFn: () => getPessoas(),
+  });
+  const pessoas: Pessoas = pessoasData ?? { A: [], B: [], C: [], D: [] };
 
-  useEffect(() => {
-    setPessoas(carregarPessoas());
-  }, []);
 
   const dias = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
