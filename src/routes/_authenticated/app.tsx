@@ -392,6 +392,7 @@ function EsteiraPreview() {
     try {
       const r = await criar({ data: { nome: `Escala ${hojeIso}`, data: hojeIso, esteira: e } });
       qc.invalidateQueries({ queryKey: ["planejamentos"] });
+      setE(esteiraVazia());
       toast.success("Planejamento salvo");
       navigate({ to: "/planejamentos/$id", params: { id: r.id } });
     } catch (err) {
