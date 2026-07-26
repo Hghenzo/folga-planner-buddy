@@ -100,29 +100,55 @@ function Slot({
   );
 }
 
+const NEON = {
+  red: {
+    wrap: "border-neon-red/50 shadow-[0_0_18px_-4px_var(--neon-red)]",
+    bar: "bg-neon-red shadow-[0_0_12px_var(--neon-red)]",
+    text: "text-neon-red",
+  },
+  yellow: {
+    wrap: "border-neon-yellow/50 shadow-[0_0_18px_-4px_var(--neon-yellow)]",
+    bar: "bg-neon-yellow shadow-[0_0_12px_var(--neon-yellow)]",
+    text: "text-neon-yellow",
+  },
+  green: {
+    wrap: "border-neon-green/50 shadow-[0_0_18px_-4px_var(--neon-green)]",
+    bar: "bg-neon-green shadow-[0_0_12px_var(--neon-green)]",
+    text: "text-neon-green",
+  },
+} as const;
+
+/** 11–16 vermelho neon · 21–27 amarelo neon · 31–40 verde neon */
+function neonDaIlha(id: string) {
+  const n = Number(id);
+  if (n >= 31) return NEON.green;
+  if (n >= 21) return NEON.yellow;
+  return NEON.red;
+}
+
 function IlhaCard({
   id,
   slots,
   onChange,
   disabled,
-  side,
   ctx,
 }: {
   id: string;
   slots: IlhaSlots;
   onChange: (s: IlhaSlots) => void;
   disabled?: boolean;
-  side: "esq" | "dir";
   ctx: Ctx;
 }) {
   const montadores = slots.montadores ?? [];
+  const cor = neonDaIlha(id);
   return (
-    <div
-      className={`rounded-xl border border-border/60 bg-card/60 p-2.5 ${side === "esq" ? "border-l-4 border-l-brand-cyan" : "border-r-4 border-r-brand-purple"}`}
-    >
-      <div className="mb-1.5 flex items-center justify-between">
-        <div className="text-xs font-black">Ilha {id}</div>
-      </div>
+    <div className={`overflow-hidden rounded-xl border bg-card/60 ${cor.wrap}`}>
+      <div className={`h-1 w-full ${cor.bar}`} />
+      <div className="p-2.5">
+        <div className="mb-1.5 flex items-center justify-between">
+          <div className={`text-xs font-black ${cor.text}`}>Ilha {id}</div>
+        </div>
+
       <div className="space-y-1.5">
         <Slot
           label="Pescador"
