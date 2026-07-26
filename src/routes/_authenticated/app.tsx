@@ -333,14 +333,39 @@ function NovoPlanejamentoDialog() {
   );
 }
 
+/** Nomes que trabalham e nomes de folga em um dia. */
+export function usarEscalaDoDia(iso: string) {
+  const getPessoas = useServerFn(obterPessoas);
+  const { data: pessoas } = useQuery({ queryKey: ["pessoas"], queryFn: () => getPessoas() });
+  const dia = new Date(iso + "T00:00:00");
+  const turmaFolga = turmaDoDia(dia);
+  const disponiveis: string[] = [];
+  const emFolga: string[] = [];
+  for (const t of TURMAS) {
+    const lista = pessoas?.[t] ?? [];
+    if (t === turmaFolga) emFolga.push(...lista);
+    else disponiveis.push(...lista);
+  }
+  return { disponiveis, emFolga, turmaFolga };
+}
+
 function EsteiraPreview() {
+  const hojeIso = new Date().toISOString().slice(0, 10);
   const [e, setE] = useState(esteiraVazia());
+  const { disponiveis, emFolga, turmaFolga } = usarEscalaDoDia(hojeIso);
   return (
     <div className="space-y-3">
       <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-4 text-center text-xs text-muted-foreground">
-        Prévia da esteira. Para salvar, crie um <b>planejamento</b>.
+        Prévia da esteira (folga de hoje: <b>Turma {turmaFolga ?? "—"}</b>). Para salvar, crie um{" "}
+        <b>planejamento</b>.
       </div>
-      <EsteiraBoard value={e} onChange={setE} />
+      <EsteiraBoard
+        value={e}
+        onChange={setE}
+        disponiveis={disponiveis}
+        emFolga={emFolga}
+      />
     </div>
   );
 }
+
