@@ -90,6 +90,7 @@ export const salvarLancamento = createServerFn({ method: "POST" })
         { onConflict: "user_id,nome,data" },
       );
     if (error) throw new Error(error.message);
+    await sincronizarNotas(supabase, userId, "meta");
     return { ok: true };
   });
 
