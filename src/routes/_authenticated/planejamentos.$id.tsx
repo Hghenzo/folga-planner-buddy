@@ -3,9 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Wand2 } from "lucide-react";
+import { ChevronLeft, Save } from "lucide-react";
 import { toast } from "sonner";
-import { EsteiraBoard } from "@/components/esteira-board";
+import { EsteirasTabs } from "@/components/esteira-board";
 import { ChatIA } from "@/components/chat-ia";
 import { CompartilharDialog } from "@/components/compartilhar-dialog";
 import {
@@ -13,11 +13,7 @@ import {
   obterPessoas,
   obterPlanejamento,
 } from "@/lib/planejamentos.functions";
-import {
-  distribuirNomes,
-  normalizarEsteira,
-  type EsteiraState,
-} from "@/lib/esteira";
+import { normalizarPlano, type PlanoEsteiras } from "@/lib/esteira";
 
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
 
@@ -51,7 +47,7 @@ function PlanoDetalhe() {
     queryFn: () => getPessoas(),
   });
 
-  const [esteira, setEsteira] = useState<EsteiraState | null>(null);
+  const [plano, setPlano] = useState<PlanoEsteiras | null>(null);
   const [hidratadoId, setHidratadoId] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -60,17 +56,16 @@ function PlanoDetalhe() {
 
   // hidrata (e reseta ao trocar de planejamento)
   if (data && hidratadoId !== id) {
-    setEsteira(normalizarEsteira(data.esteira));
+    setPlano(normalizarPlano(data.esteira));
     setHidratadoId(id);
     setDirty(false);
   }
 
-
   async function salvarAgora() {
-    if (!esteira) return;
+    if (!plano) return;
     setSaving(true);
     try {
-      await salvar({ data: { id, esteira } });
+      await salvar({ data: { id, esteira: plano } });
       setDirty(false);
       qc.invalidateQueries({ queryKey: ["planejamento", id] });
       toast.success("Salvo");
@@ -79,19 +74,6 @@ function PlanoDetalhe() {
     } finally {
       setSaving(false);
     }
-  }
-
-  function autoPreencher() {
-    if (!esteira || !data || !pessoas) return;
-    const dia = new Date(data.data + "T00:00:00");
-    const turmaFolga = turmaDoDia(dia);
-    const disp: string[] = [];
-    for (const t of TURMAS) {
-      if (t === turmaFolga) continue;
-      disp.push(...(pessoas[t] ?? []));
-    }
-    setEsteira(distribuirNomes(esteira, disp));
-    setDirty(true);
   }
 
   const { disponiveis, emFolga } = (() => {
@@ -107,8 +89,7 @@ function PlanoDetalhe() {
     return { disponiveis: out, emFolga: folga };
   })();
 
-
-  if (isLoading || !data || !esteira) {
+  if (isLoading || !data || !plano) {
     return (
       <div className="p-6 text-center text-sm text-muted-foreground">carregando…</div>
     );
@@ -135,24 +116,13 @@ function PlanoDetalhe() {
         <div className="flex gap-1">
           {data.permissao === "owner" && <CompartilharDialog id={id} />}
           {!readOnly && (
-            <>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={autoPreencher}
-                title="Distribuir automaticamente"
-                className="rounded-xl border border-border/60 bg-card/60"
-              >
-                <Wand2 className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={salvarAgora}
-                disabled={!dirty || saving}
-                className="h-9 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground"
-              >
-                <Save className="mr-1.5 h-4 w-4" /> Salvar
-              </Button>
-            </>
+            <Button
+              onClick={salvarAgora}
+              disabled={!dirty || saving}
+              className="h-9 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground"
+            >
+              <Save className="mr-1.5 h-4 w-4" /> Salvar
+            </Button>
           )}
         </div>
       </div>
@@ -163,28 +133,28 @@ function PlanoDetalhe() {
         </div>
       )}
 
-      <EsteiraBoard
-        value={esteira}
+      <EsteirasTabs
+        value={plano}
         readOnly={readOnly}
         disponiveis={disponiveis}
         emFolga={emFolga}
-        onChange={(e) => {
-          setEsteira(e);
+        onChange={(p) => {
+          setPlano(p);
           setDirty(true);
         }}
+        renderFooter={({ esteira, setEsteira }) =>
+          readOnly ? null : (
+            <ChatIA
+              esteira={esteira}
+              disponiveis={disponiveis}
+              onEsteira={(e) => {
+                setEsteira(e);
+                setDirty(true);
+              }}
+            />
+          )
+        }
       />
-
-
-      {!readOnly && (
-        <ChatIA
-          esteira={esteira}
-          disponiveis={disponiveis}
-          onEsteira={(e) => {
-            setEsteira(e);
-            setDirty(true);
-          }}
-        />
-      )}
     </div>
   );
 }
