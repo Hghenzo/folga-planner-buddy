@@ -447,12 +447,12 @@ function SugestaoHoje({ planos }: { planos: PlanoResumo[] }) {
   async function gerar() {
     setLoading(true);
     try {
-      let esteira = esteiraVazia();
+      let esteira = planoVazio();
       if (mesmaFolga && planoOntem) {
         const anterior = await obter({ data: { id: planoOntem.id } });
-        esteira = normalizarEsteira(anterior.esteira);
+        esteira = normalizarPlano(anterior.esteira);
       } else {
-        esteira = distribuirNomes(esteira, disponiveis);
+        esteira.full = distribuirNomes(esteira.full, disponiveis);
       }
       const r = await criar({
         data: { nome: `Escala ${isoHoje}`, data: isoHoje, esteira },
