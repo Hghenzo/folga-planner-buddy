@@ -270,7 +270,7 @@ function NovoPlanejamentoDialog() {
   async function criarPlano() {
     setLoading(true);
     try {
-      let esteira = esteiraVazia();
+      const esteira = planoVazio();
       if (autoDistribuir) {
         const pessoas = await getPessoas();
         const dia = new Date(data + "T00:00:00");
@@ -280,7 +280,7 @@ function NovoPlanejamentoDialog() {
           if (t === turmaFolga) continue;
           disponiveis.push(...(pessoas[t] ?? []));
         }
-        esteira = distribuirNomes(esteira, disponiveis);
+        esteira.full = distribuirNomes(esteira.full, disponiveis);
       }
       const r = await criar({
         data: { nome: nome || `Escala ${data}`, data, esteira },
