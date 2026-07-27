@@ -34,7 +34,7 @@ import {
   obterPlanejamento,
   usarCodigoAcesso,
 } from "@/lib/planejamentos.functions";
-import { distribuirNomes, ilhasDe, normalizarPlano, planoVazio } from "@/lib/esteira";
+import { distribuirNomes, normalizarPlano, planoVazio } from "@/lib/esteira";
 import { AvaliacoesTab } from "@/components/avaliacoes-tab";
 import { ProducaoTab, RankingEquipesCard } from "@/components/producao-tab";
 
