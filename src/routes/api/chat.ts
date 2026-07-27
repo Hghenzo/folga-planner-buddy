@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { esteiraVazia, TODAS_ILHAS } from "@/lib/esteira";
+import { esteiraVazia, TODAS_ILHAS, type EsteiraState } from "@/lib/esteira";
 
 type ChatBody = {
   message?: string;
