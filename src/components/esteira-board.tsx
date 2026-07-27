@@ -1,9 +1,22 @@
-import { useMemo, useState } from "react";
-import type { EsteiraState, IlhaSlots } from "@/lib/esteira";
-import { ILHAS_ESQ, ILHAS_DIR, normalizarEsteira } from "@/lib/esteira";
+import { useMemo, useState, type ReactNode } from "react";
+import type { EsteiraKey, EsteiraState, IlhaSlots, PlanoEsteiras } from "@/lib/esteira";
+import {
+  ESTEIRAS,
+  ILHAS_ESQ,
+  ILHAS_DIR,
+  distribuirComDiaristas,
+  distribuirNomes,
+  ehDiarista,
+  esteiraDef,
+  esteiraVazia,
+  ilhasDe,
+  normalizarEsteira,
+  normalizarPlano,
+} from "@/lib/esteira";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, X, AlertTriangle } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Plus, X, AlertTriangle, Sparkles, Users } from "lucide-react";
 
 type Ctx = {
   /** Nomes que estão trabalhando no dia (podem ser usados) */
@@ -35,9 +48,14 @@ function Slot({
 }) {
   const listId = useMemo(() => `pessoas-${Math.random().toString(36).slice(2, 8)}`, []);
   const v = norm(value);
-  const folga = v.length > 0 && ctx.emFolga.some((n) => norm(n) === v);
+  const diarista = ehDiarista(value);
+  const folga = !diarista && v.length > 0 && ctx.emFolga.some((n) => norm(n) === v);
   const desconhecido =
-    v.length > 0 && !folga && ctx.disponiveis.length > 0 && !ctx.disponiveis.some((n) => norm(n) === v);
+    !diarista &&
+    v.length > 0 &&
+    !folga &&
+    ctx.disponiveis.length > 0 &&
+    !ctx.disponiveis.some((n) => norm(n) === v);
 
   const sugestoes = useMemo(() => {
     if (!folga && !desconhecido) return [];
@@ -72,7 +90,9 @@ function Slot({
             ? "border-destructive bg-destructive/10 text-destructive"
             : desconhecido
               ? "border-turma-b/70 bg-turma-b/10 text-turma-b"
-              : "border-border/50 bg-input/40"
+              : diarista
+                ? "border-brand-cyan/60 bg-brand-cyan/10 text-brand-cyan"
+                : "border-border/50 bg-input/40"
         }`}
       />
       <datalist id={listId}>
@@ -118,8 +138,11 @@ const NEON = {
   },
 } as const;
 
+type CorEsteira = "auto" | "red" | "yellow" | "green";
+
 /** 11–16 vermelho neon · 21–27 amarelo neon · 31–40 verde neon */
-function neonDaIlha(id: string) {
+function neonDaIlha(id: string, cor: CorEsteira = "auto") {
+  if (cor !== "auto") return NEON[cor];
   const n = Number(id);
   if (n >= 31) return NEON.green;
   if (n >= 21) return NEON.yellow;
@@ -132,21 +155,23 @@ function IlhaCard({
   onChange,
   disabled,
   ctx,
+  cor,
 }: {
   id: string;
   slots: IlhaSlots;
   onChange: (s: IlhaSlots) => void;
   disabled?: boolean;
   ctx: Ctx;
+  cor?: CorEsteira;
 }) {
   const montadores = slots.montadores ?? [];
-  const cor = neonDaIlha(id);
+  const c = neonDaIlha(id, cor);
   return (
-    <div className={`overflow-hidden rounded-xl border bg-card/60 ${cor.wrap}`}>
-      <div className={`h-1 w-full ${cor.bar}`} />
+    <div className={`overflow-hidden rounded-xl border bg-card/60 ${c.wrap}`}>
+      <div className={`h-1 w-full ${c.bar}`} />
       <div className="p-2.5">
         <div className="mb-1.5 flex items-center justify-between">
-          <div className={`text-xs font-black ${cor.text}`}>Ilha {id}</div>
+          <div className={`text-xs font-black ${c.text}`}>Ilha {id}</div>
         </div>
 
       <div className="space-y-1.5">
@@ -210,22 +235,24 @@ export function EsteiraBoard({
   readOnly,
   disponiveis = [],
   emFolga = [],
+  ilhasEsq = [...ILHAS_ESQ],
+  ilhasDir = [...ILHAS_DIR],
+  cor = "auto",
 }: {
   value: EsteiraState;
   onChange: (e: EsteiraState) => void;
   readOnly?: boolean;
   disponiveis?: string[];
   emFolga?: string[];
+  ilhasEsq?: string[];
+  ilhasDir?: string[];
+  cor?: CorEsteira;
 }) {
-  const [e, setE] = useState<EsteiraState>(() => normalizarEsteira(value));
+  const ids = useMemo(() => [...ilhasEsq, ...ilhasDir], [ilhasEsq, ilhasDir]);
+  const e = useMemo(() => normalizarEsteira(value, ids), [value, ids]);
   const ctx: Ctx = disponiveis.length || emFolga.length ? { disponiveis, emFolga } : CtxVazio;
 
-  // Keep local + parent in sync when value prop changes
-  if (e !== value && JSON.stringify(e) !== JSON.stringify(value)) {
-    setE(normalizarEsteira(value));
-  }
   function upd(next: EsteiraState) {
-    setE(next);
     onChange(next);
   }
   function updIlha(id: string, s: IlhaSlots) {
@@ -320,11 +347,12 @@ export function EsteiraBoard({
             <div className="text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Esquerdo
             </div>
-            {ILHAS_ESQ.map((id) => (
+            {ilhasEsq.map((id) => (
               <IlhaCard
                 key={id}
                 id={id}
                 ctx={ctx}
+                cor={cor}
                 slots={e.ilhas[id]}
                 onChange={(s) => updIlha(id, s)}
                 disabled={readOnly}
@@ -335,11 +363,12 @@ export function EsteiraBoard({
             <div className="text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Direito
             </div>
-            {ILHAS_DIR.map((id) => (
+            {ilhasDir.map((id) => (
               <IlhaCard
                 key={id}
                 id={id}
                 ctx={ctx}
+                cor={cor}
                 slots={e.ilhas[id]}
                 onChange={(s) => updIlha(id, s)}
                 disabled={readOnly}
@@ -360,4 +389,106 @@ export function EsteiraBoard({
   );
 }
 
+/** As 4 esteiras (Full, Vermelha, Amarela, Verde) em sub-abas. */
+export function EsteirasTabs({
+  value,
+  onChange,
+  readOnly,
+  disponiveis = [],
+  emFolga = [],
+  renderFooter,
+}: {
+  value: PlanoEsteiras;
+  onChange: (p: PlanoEsteiras) => void;
+  readOnly?: boolean;
+  disponiveis?: string[];
+  emFolga?: string[];
+  renderFooter?: (args: {
+    key: EsteiraKey;
+    esteira: EsteiraState;
+    setEsteira: (e: EsteiraState) => void;
+  }) => ReactNode;
+}) {
+  const plano = useMemo(() => normalizarPlano(value), [value]);
+  const [aba, setAba] = useState<EsteiraKey>("full");
 
+  function setEsteira(key: EsteiraKey, e: EsteiraState) {
+    onChange({ ...plano, [key]: e });
+  }
+
+  function gerar(key: EsteiraKey) {
+    const def = esteiraDef(key);
+    const base = esteiraVazia(ilhasDe(key));
+    const nova = def.diaristas
+      ? distribuirComDiaristas(base, disponiveis, plano.diaristas)
+      : distribuirNomes(base, disponiveis);
+    onChange({ ...plano, [key]: nova });
+  }
+
+  return (
+    <Tabs value={aba} onValueChange={(v) => setAba(v as EsteiraKey)} className="space-y-3">
+      <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-card/60">
+        {ESTEIRAS.map((d) => (
+          <TabsTrigger key={d.key} value={d.key} className="rounded-xl text-[11px]">
+            {d.nome}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+
+      {ESTEIRAS.map((d) => (
+        <TabsContent key={d.key} value={d.key} className="space-y-3">
+          {!readOnly && (
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-card/50 p-3">
+              {d.diaristas && (
+                <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                  <Users className="h-4 w-4" />
+                  Diaristas hoje
+                  <Input
+                    type="number"
+                    min={0}
+                    max={50}
+                    value={plano.diaristas}
+                    onChange={(ev) =>
+                      onChange({
+                        ...plano,
+                        diaristas: Math.max(0, Math.min(50, Number(ev.target.value) || 0)),
+                      })
+                    }
+                    className="h-9 w-20 rounded-lg bg-input/60 text-center text-sm font-bold"
+                  />
+                </label>
+              )}
+              <Button
+                onClick={() => gerar(d.key)}
+                className="ml-auto h-9 rounded-xl bg-[image:var(--gradient-primary)] text-xs font-bold text-primary-foreground"
+              >
+                <Sparkles className="mr-1.5 h-4 w-4" /> Gerar {d.nome.toLowerCase()}
+              </Button>
+            </div>
+          )}
+          {d.diaristas && !readOnly && (
+            <p className="px-1 text-[11px] text-muted-foreground">
+              Diaristas entram primeiro na pesca; se as pescas encherem, o restante vai para a
+              indução. Diarista nunca fica na montagem.
+            </p>
+          )}
+          <EsteiraBoard
+            value={plano[d.key]}
+            onChange={(e) => setEsteira(d.key, e)}
+            readOnly={readOnly}
+            disponiveis={disponiveis}
+            emFolga={emFolga}
+            ilhasEsq={d.esq}
+            ilhasDir={d.dir}
+            cor={d.cor}
+          />
+          {renderFooter?.({
+            key: d.key,
+            esteira: plano[d.key],
+            setEsteira: (e) => setEsteira(d.key, e),
+          })}
+        </TabsContent>
+      ))}
+    </Tabs>
+  );
+}

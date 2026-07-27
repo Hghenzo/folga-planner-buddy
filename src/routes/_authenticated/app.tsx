@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CalendarioView } from "@/components/calendario-view";
-import { EsteiraBoard } from "@/components/esteira-board";
+import { EsteirasTabs } from "@/components/esteira-board";
 import {
   criarPlanejamento,
   excluirPlanejamento,
@@ -34,7 +34,7 @@ import {
   obterPlanejamento,
   usarCodigoAcesso,
 } from "@/lib/planejamentos.functions";
-import { distribuirNomes, esteiraVazia, normalizarEsteira } from "@/lib/esteira";
+import { distribuirNomes, normalizarPlano, planoVazio } from "@/lib/esteira";
 import { AvaliacoesTab } from "@/components/avaliacoes-tab";
 import { ProducaoTab, RankingEquipesCard } from "@/components/producao-tab";
 
@@ -270,7 +270,7 @@ function NovoPlanejamentoDialog() {
   async function criarPlano() {
     setLoading(true);
     try {
-      let esteira = esteiraVazia();
+      const esteira = planoVazio();
       if (autoDistribuir) {
         const pessoas = await getPessoas();
         const dia = new Date(data + "T00:00:00");
@@ -280,7 +280,7 @@ function NovoPlanejamentoDialog() {
           if (t === turmaFolga) continue;
           disponiveis.push(...(pessoas[t] ?? []));
         }
-        esteira = distribuirNomes(esteira, disponiveis);
+        esteira.full = distribuirNomes(esteira.full, disponiveis);
       }
       const r = await criar({
         data: { nome: nome || `Escala ${data}`, data, esteira },
@@ -371,28 +371,19 @@ export function usarEscalaDoDia(iso: string) {
 
 function EsteiraPreview() {
   const hojeIso = new Date().toISOString().slice(0, 10);
-  const [e, setE] = useState(esteiraVazia());
+  const [plano, setPlano] = useState(planoVazio());
   const [salvando, setSalvando] = useState(false);
   const { disponiveis, emFolga, turmaFolga } = usarEscalaDoDia(hojeIso);
   const criar = useServerFn(criarPlanejamento);
   const qc = useQueryClient();
   const navigate = useNavigate();
 
-  function gerar() {
-    if (!disponiveis.length) {
-      toast.error("Cadastre os nomes das turmas em Configurações");
-      return;
-    }
-    setE(distribuirNomes(esteiraVazia(), disponiveis));
-    toast.success("Planejamento gerado");
-  }
-
   async function salvar() {
     setSalvando(true);
     try {
-      const r = await criar({ data: { nome: `Escala ${hojeIso}`, data: hojeIso, esteira: e } });
+      const r = await criar({ data: { nome: `Escala ${hojeIso}`, data: hojeIso, esteira: plano } });
       qc.invalidateQueries({ queryKey: ["planejamentos"] });
-      setE(esteiraVazia());
+      setPlano(planoVazio());
       toast.success("Planejamento salvo");
       navigate({ to: "/planejamentos/$id", params: { id: r.id } });
     } catch (err) {
@@ -404,28 +395,17 @@ function EsteiraPreview() {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-4 text-center text-xs text-muted-foreground">
-        Prévia da esteira (folga de hoje: <b>Turma {turmaFolga ?? "—"}</b>).
-      </div>
-      <div className="flex gap-2">
-        <Button
-          onClick={gerar}
-          className="h-11 flex-1 rounded-xl bg-[image:var(--gradient-primary)] font-bold text-primary-foreground"
-        >
-          <Sparkles className="mr-2 h-4 w-4" /> Gerar planejamento
-        </Button>
-        <Button
-          onClick={salvar}
-          disabled={salvando}
-          variant="outline"
-          className="h-11 rounded-xl"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Salvar
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-border/60 bg-card/40 p-4 text-xs text-muted-foreground">
+        <span>
+          Prévia das esteiras (folga de hoje: <b>Turma {turmaFolga ?? "—"}</b>).
+        </span>
+        <Button onClick={salvar} disabled={salvando} variant="outline" className="h-10 rounded-xl">
+          <Plus className="mr-2 h-4 w-4" /> Salvar planejamento
         </Button>
       </div>
-      <EsteiraBoard
-        value={e}
-        onChange={setE}
+      <EsteirasTabs
+        value={plano}
+        onChange={setPlano}
         disponiveis={disponiveis}
         emFolga={emFolga}
       />
@@ -467,12 +447,12 @@ function SugestaoHoje({ planos }: { planos: PlanoResumo[] }) {
   async function gerar() {
     setLoading(true);
     try {
-      let esteira = esteiraVazia();
+      let esteira = planoVazio();
       if (mesmaFolga && planoOntem) {
         const anterior = await obter({ data: { id: planoOntem.id } });
-        esteira = normalizarEsteira(anterior.esteira);
+        esteira = normalizarPlano(anterior.esteira);
       } else {
-        esteira = distribuirNomes(esteira, disponiveis);
+        esteira.full = distribuirNomes(esteira.full, disponiveis);
       }
       const r = await criar({
         data: { nome: `Escala ${isoHoje}`, data: isoHoje, esteira },
