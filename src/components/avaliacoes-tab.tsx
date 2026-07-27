@@ -63,23 +63,19 @@ function Carta({ a }: { a: Avaliacao }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-[1.75rem] p-4 shadow-[var(--shadow-card)] ring-1 ring-black/10"
+      className="relative flex min-h-[26rem] flex-col overflow-hidden rounded-[2rem] p-5 shadow-[var(--shadow-card)] ring-1 ring-black/10"
       style={{ backgroundImage: t.bg, color: t.fg }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-5xl font-black leading-none tracking-tight">{ov}</div>
-          <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.25em] opacity-70">
-            Overall · {t.nome}
-          </div>
-          <div className="mt-3 truncate text-xl font-black leading-tight">{a.nome}</div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-60">
-            {a.turma ? `Turma ${a.turma}` : "sem turma"}
+          <div className="text-7xl font-black leading-none tracking-tighter">{ov}</div>
+          <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.3em] opacity-70">
+            {t.nome}
           </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
           {a.turma && (
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-black/15 text-xs font-black">
+            <div className="grid h-14 w-14 place-items-center rounded-full bg-black/15 text-base font-black">
               T{a.turma}
             </div>
           )}
@@ -95,12 +91,21 @@ function Carta({ a }: { a: Avaliacao }) {
         </div>
       </div>
 
+      <div className="mt-5 text-center">
+        <div className="truncate text-2xl font-black uppercase leading-tight tracking-wide">
+          {a.nome}
+        </div>
+        <div className="text-[10px] font-semibold uppercase tracking-[0.25em] opacity-60">
+          {a.turma ? `Turma ${a.turma}` : "sem turma"}
+        </div>
+      </div>
+
       <div className="mt-4 h-px w-full bg-current opacity-20" />
 
-      <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5">
+      <div className="mt-4 grid flex-1 grid-cols-2 gap-x-6 gap-y-3 content-start">
         {CATEGORIAS.map((c) => (
           <div key={c} className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-widest opacity-70">
+            <span className="text-[12px] font-bold uppercase tracking-widest opacity-70">
               {SIGLA[c]}
             </span>
             {edit ? (
@@ -112,11 +117,11 @@ function Carta({ a }: { a: Avaliacao }) {
                 onChange={(ev) =>
                   setVals((v) => ({ ...v, [c]: Math.max(0, Math.min(100, Number(ev.target.value) || 0)) }))
                 }
-                className="h-7 w-16 rounded-md border-black/20 bg-black/10 px-1.5 text-right text-xs font-bold"
+                className="h-8 w-16 rounded-md border-black/20 bg-black/10 px-1.5 text-right text-sm font-bold"
                 style={{ color: t.fg }}
               />
             ) : (
-              <span className="text-sm font-black tabular-nums">{a[c]}</span>
+              <span className="text-2xl font-black leading-none tabular-nums">{a[c]}</span>
             )}
           </div>
         ))}
