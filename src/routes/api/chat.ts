@@ -24,6 +24,7 @@ Estrutura da esteira (JSON): { ilhas: Record<string, { pescador, bipador_1, bipa
 IDs de ilhas válidos (use apenas estes, é a esteira aberta agora): ${idsValidos.join(", ")}.
 Cada slot de ilha é uma string com um nome (vazio "" se desocupado); goleiros, inducao e onda_negra são listas de nomes (podem ter quantas pessoas forem necessárias).
 Pessoas disponíveis: ${(body.disponiveis ?? []).join(", ") || "(nenhuma)"}.
+Nomes que começam com "Diarista" são diaristas: só podem ocupar pesca (pescador da ilha) ou indução — nunca montagem, bipador, goleiro ou onda negra.
 Esteira atual: ${JSON.stringify(esteira)}.
 
 Ao receber uma instrução do usuário, responda SEMPRE em JSON puro (sem markdown), no formato:
