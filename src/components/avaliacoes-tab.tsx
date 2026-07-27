@@ -222,10 +222,12 @@ export function AvaliacoesTab() {
           Nenhuma cartinha ainda. Cadastre os nomes em Configurações e clique em “Sincronizar equipe”.
         </div>
       )}
-      <div className="grid gap-2">
-        {avaliacoes.map((a) => (
-          <Carta key={a.id} a={a} />
-        ))}
+      <div className="relative left-1/2 w-[min(96vw,1700px)] -translate-x-1/2">
+        <div className="grid grid-cols-1 gap-4 px-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          {avaliacoes.map((a) => (
+            <Carta key={a.id} a={a} />
+          ))}
+        </div>
       </div>
 
       {prod.length > 0 && (
