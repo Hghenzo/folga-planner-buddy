@@ -16,10 +16,12 @@ export const Route = createFileRoute("/api/chat")({
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
-        const esteira = body.esteira ?? esteiraVazia();
+        const esteira = (body.esteira ?? esteiraVazia()) as EsteiraState;
+        const ilhas = Object.keys(esteira?.ilhas ?? {});
+        const idsValidos = ilhas.length ? ilhas : TODAS_ILHAS;
         const sys = `Você é um assistente que edita um planejamento de esteira de trabalho.
 Estrutura da esteira (JSON): { ilhas: Record<string, { pescador, bipador_1, bipador_2, montadores: string[] }>, goleiros: string[], inducao: string[], onda_negra: { pesca: string[], monta: string[] } }.
-IDs de ilhas válidos: ${TODAS_ILHAS.join(", ")}.
+IDs de ilhas válidos (use apenas estes, é a esteira aberta agora): ${idsValidos.join(", ")}.
 Cada slot de ilha é uma string com um nome (vazio "" se desocupado); goleiros, inducao e onda_negra são listas de nomes (podem ter quantas pessoas forem necessárias).
 Pessoas disponíveis: ${(body.disponiveis ?? []).join(", ") || "(nenhuma)"}.
 Esteira atual: ${JSON.stringify(esteira)}.
