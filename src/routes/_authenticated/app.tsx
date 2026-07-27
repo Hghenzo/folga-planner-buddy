@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CalendarioView } from "@/components/calendario-view";
-import { EsteiraBoard } from "@/components/esteira-board";
+import { EsteirasTabs } from "@/components/esteira-board";
 import {
   criarPlanejamento,
   excluirPlanejamento,
@@ -34,7 +34,7 @@ import {
   obterPlanejamento,
   usarCodigoAcesso,
 } from "@/lib/planejamentos.functions";
-import { distribuirNomes, esteiraVazia, normalizarEsteira } from "@/lib/esteira";
+import { distribuirNomes, ilhasDe, normalizarPlano, planoVazio } from "@/lib/esteira";
 import { AvaliacoesTab } from "@/components/avaliacoes-tab";
 import { ProducaoTab, RankingEquipesCard } from "@/components/producao-tab";
 
