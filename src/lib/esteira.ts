@@ -1,8 +1,71 @@
 // Estrutura da esteira (baseada no print e na descrição do usuário)
 
+/** Esteira Full (todas as ilhas) */
 export const ILHAS_ESQ = ["11", "13", "15", "31", "32", "33", "34", "35", "36", "40"] as const;
 export const ILHAS_DIR = ["12", "14", "16", "21", "22", "23", "24", "25", "26", "27"] as const;
 export const TODAS_ILHAS = [...ILHAS_ESQ, ...ILHAS_DIR];
+
+/** Esteira vermelha: 11–16, ímpares à esquerda / pares à direita */
+export const ILHAS_VERMELHA_ESQ = ["11", "13", "15"];
+export const ILHAS_VERMELHA_DIR = ["12", "14", "16"];
+
+/** Esteira amarela: 21–27, ímpares à esquerda / pares à direita */
+export const ILHAS_AMARELA_ESQ = ["21", "23", "25", "27"];
+export const ILHAS_AMARELA_DIR = ["22", "24", "26"];
+
+/** Esteira verde: 31–37 invertida — direita começa no 37, esquerda termina no 32 */
+export const ILHAS_VERDE_DIR = ["37", "35", "33", "31"];
+export const ILHAS_VERDE_ESQ = ["36", "34", "32"];
+
+export type EsteiraKey = "full" | "vermelha" | "amarela" | "verde";
+
+export type EsteiraDef = {
+  key: EsteiraKey;
+  nome: string;
+  esq: string[];
+  dir: string[];
+  /** usa cor fixa (neon) ou cor por faixa de ilha (full) */
+  cor: "auto" | "red" | "yellow" | "green";
+  /** esteiras com diaristas */
+  diaristas: boolean;
+};
+
+export const ESTEIRAS: EsteiraDef[] = [
+  { key: "full", nome: "Full", esq: [...ILHAS_ESQ], dir: [...ILHAS_DIR], cor: "auto", diaristas: false },
+  {
+    key: "vermelha",
+    nome: "Vermelha",
+    esq: ILHAS_VERMELHA_ESQ,
+    dir: ILHAS_VERMELHA_DIR,
+    cor: "red",
+    diaristas: true,
+  },
+  {
+    key: "amarela",
+    nome: "Amarela",
+    esq: ILHAS_AMARELA_ESQ,
+    dir: ILHAS_AMARELA_DIR,
+    cor: "yellow",
+    diaristas: true,
+  },
+  {
+    key: "verde",
+    nome: "Verde",
+    esq: ILHAS_VERDE_ESQ,
+    dir: ILHAS_VERDE_DIR,
+    cor: "green",
+    diaristas: true,
+  },
+];
+
+export function esteiraDef(key: EsteiraKey): EsteiraDef {
+  return ESTEIRAS.find((e) => e.key === key) ?? ESTEIRAS[0];
+}
+
+export function ilhasDe(key: EsteiraKey): string[] {
+  const d = esteiraDef(key);
+  return [...d.esq, ...d.dir];
+}
 
 export type IlhaSlots = {
   pescador: string;
@@ -21,9 +84,19 @@ export type EsteiraState = {
   onda_negra: { pesca: string[]; monta: string[] };
 };
 
-export function esteiraVazia(): EsteiraState {
+/** Conjunto das 4 esteiras salvas em um planejamento */
+export type PlanoEsteiras = {
+  full: EsteiraState;
+  vermelha: EsteiraState;
+  amarela: EsteiraState;
+  verde: EsteiraState;
+  /** quantidade de diaristas do dia */
+  diaristas: number;
+};
+
+export function esteiraVazia(ilhasIds: readonly string[] = TODAS_ILHAS): EsteiraState {
   const ilhas: Record<string, IlhaSlots> = {};
-  for (const id of TODAS_ILHAS) {
+  for (const id of ilhasIds) {
     ilhas[id] = { pescador: "", bipador_1: "", bipador_2: "", montadores: [] };
   }
   return {
@@ -31,6 +104,16 @@ export function esteiraVazia(): EsteiraState {
     goleiros: ["", ""],
     inducao: [""],
     onda_negra: { pesca: [""], monta: [""] },
+  };
+}
+
+export function planoVazio(): PlanoEsteiras {
+  return {
+    full: esteiraVazia(ilhasDe("full")),
+    vermelha: esteiraVazia(ilhasDe("vermelha")),
+    amarela: esteiraVazia(ilhasDe("amarela")),
+    verde: esteiraVazia(ilhasDe("verde")),
+    diaristas: 0,
   };
 }
 
@@ -45,13 +128,16 @@ function lista(raw: unknown, minimo = 1): string[] {
 }
 
 /** Garante que um estado vindo do banco tenha todos os campos atuais. */
-export function normalizarEsteira(raw: unknown): EsteiraState {
-  const base = esteiraVazia();
+export function normalizarEsteira(
+  raw: unknown,
+  ilhasIds: readonly string[] = TODAS_ILHAS,
+): EsteiraState {
+  const base = esteiraVazia(ilhasIds);
   if (!raw || typeof raw !== "object") return base;
   const e = raw as Record<string, unknown>;
   const ilhasRaw = (e.ilhas ?? {}) as Record<string, Partial<IlhaSlots> | undefined>;
   const ilhas: Record<string, IlhaSlots> = {};
-  for (const id of TODAS_ILHAS) {
+  for (const id of ilhasIds) {
     const s = ilhasRaw[id];
     ilhas[id] = {
       pescador: s?.pescador ?? "",
@@ -72,10 +158,28 @@ export function normalizarEsteira(raw: unknown): EsteiraState {
   };
 }
 
+/** Normaliza o plano completo, migrando o formato antigo (uma esteira só) para `full`. */
+export function normalizarPlano(raw: unknown): PlanoEsteiras {
+  const base = planoVazio();
+  if (!raw || typeof raw !== "object") return base;
+  const r = raw as Record<string, unknown>;
+  const novoFormato = "full" in r || "vermelha" in r || "amarela" in r || "verde" in r;
+  if (!novoFormato) {
+    return { ...base, full: normalizarEsteira(raw, ilhasDe("full")) };
+  }
+  return {
+    full: normalizarEsteira(r.full, ilhasDe("full")),
+    vermelha: normalizarEsteira(r.vermelha, ilhasDe("vermelha")),
+    amarela: normalizarEsteira(r.amarela, ilhasDe("amarela")),
+    verde: normalizarEsteira(r.verde, ilhasDe("verde")),
+    diaristas: typeof r.diaristas === "number" ? Math.max(0, Math.floor(r.diaristas)) : 0,
+  };
+}
+
 /** Todos os nomes usados na esteira. */
 export function nomesUsados(e: EsteiraState): string[] {
   const out: string[] = [];
-  for (const id of TODAS_ILHAS) {
+  for (const id of Object.keys(e.ilhas ?? {})) {
     const i = e.ilhas[id];
     if (!i) continue;
     out.push(i.pescador, i.bipador_1, i.bipador_2, ...(i.montadores ?? []));
@@ -98,12 +202,33 @@ export function totalSlots(e?: EsteiraState): number {
   const extras = e
     ? e.goleiros.length + e.inducao.length + e.onda_negra.pesca.length + e.onda_negra.monta.length
     : 5;
-  return TODAS_ILHAS.length * 3 + extras;
+  const n = e ? Object.keys(e.ilhas ?? {}).length : TODAS_ILHAS.length;
+  return n * 3 + extras;
+}
+
+export function ehDiarista(nome: string) {
+  return /^\s*diarista\b/i.test(nome ?? "");
+}
+
+/** Ordem de preenchimento das ilhas (alternando lados). */
+function ordemIlhas(e: EsteiraState, ilhasIds?: readonly string[]): string[] {
+  const ids = ilhasIds ?? Object.keys(e.ilhas ?? {});
+  const def = ESTEIRAS.find((d) => [...d.esq, ...d.dir].every((i) => ids.includes(i)) && [...d.esq, ...d.dir].length === ids.length);
+  const esq = def ? def.esq : ids.filter((_, i) => i % 2 === 0);
+  const dir = def ? def.dir : ids.filter((_, i) => i % 2 === 1);
+  const ordem: string[] = [];
+  const maxLen = Math.max(esq.length, dir.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (esq[i]) ordem.push(esq[i]);
+    if (dir[i]) ordem.push(dir[i]);
+  }
+  return ordem;
 }
 
 /** Distribui uma lista de nomes disponíveis nos slots vazios da esteira, na ordem. */
 export function distribuirNomes(base: EsteiraState, nomes: string[]): EsteiraState {
-  const e: EsteiraState = normalizarEsteira(JSON.parse(JSON.stringify(base)));
+  const ids = Object.keys(base.ilhas ?? {});
+  const e: EsteiraState = normalizarEsteira(JSON.parse(JSON.stringify(base)), ids);
   const usados = new Set(nomesUsados(e).map((n) => n.toLowerCase()));
   const fila = nomes.filter((n) => n && !usados.has(n.trim().toLowerCase()));
   const proximo = () => fila.shift() ?? "";
@@ -120,12 +245,8 @@ export function distribuirNomes(base: EsteiraState, nomes: string[]): EsteiraSta
   preencherLista(e.onda_negra.pesca);
   preencherLista(e.onda_negra.monta);
 
-  const ordem: string[] = [];
-  const maxLen = Math.max(ILHAS_ESQ.length, ILHAS_DIR.length);
-  for (let i = 0; i < maxLen; i++) {
-    if (ILHAS_ESQ[i]) ordem.push(ILHAS_ESQ[i]);
-    if (ILHAS_DIR[i]) ordem.push(ILHAS_DIR[i]);
-  }
+  const ordem = ordemIlhas(e, ids);
+  if (!ordem.length) return e;
 
   // Passa 1: pescador de cada ilha
   for (const id of ordem) {
@@ -147,4 +268,35 @@ export function distribuirNomes(base: EsteiraState, nomes: string[]): EsteiraSta
   }
 
   return e;
+}
+
+/**
+ * Distribui primeiro os diaristas (prioridade pesca, sobra vai pra indução;
+ * nunca montagem/goleiro/onda negra) e depois o pessoal da escala.
+ */
+export function distribuirComDiaristas(
+  base: EsteiraState,
+  nomes: string[],
+  qtdDiaristas: number,
+  prefixo = "Diarista",
+): EsteiraState {
+  const ids = Object.keys(base.ilhas ?? {});
+  const e: EsteiraState = normalizarEsteira(JSON.parse(JSON.stringify(base)), ids);
+  const total = Math.max(0, Math.floor(qtdDiaristas || 0));
+  const fila = Array.from({ length: total }, (_, i) => `${prefixo} ${i + 1}`);
+
+  const ordem = ordemIlhas(e, ids);
+  // 1) pesca das ilhas
+  for (const id of ordem) {
+    if (!fila.length) break;
+    if (!e.ilhas[id].pescador) e.ilhas[id].pescador = fila.shift()!;
+  }
+  // 2) onda negra é montagem/pesca especial — diarista não entra; sobra vai pra indução
+  while (fila.length) {
+    const vazio = e.inducao.findIndex((v) => !v);
+    if (vazio >= 0) e.inducao[vazio] = fila.shift()!;
+    else e.inducao.push(fila.shift()!);
+  }
+
+  return distribuirNomes(e, nomes);
 }
