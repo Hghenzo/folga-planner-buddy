@@ -494,10 +494,11 @@ export function EsteirasTabs({
               </Button>
             </div>
           )}
-          {d.diaristas && !readOnly && (
+          {!readOnly && (
             <p className="px-1 text-[11px] text-muted-foreground">
-              Diaristas entram primeiro na pesca; se as pescas encherem, o restante vai para a
-              indução. Diarista nunca fica na montagem.
+              Gerar completa só os campos vazios — nomes já colocados não são trocados.
+              {d.diaristas &&
+                " Diaristas entram primeiro na pesca; o restante vai para a indução, nunca na montagem."}
             </p>
           )}
           <EsteiraBoard
@@ -509,7 +510,10 @@ export function EsteirasTabs({
             ilhasEsq={d.esq}
             ilhasDir={d.dir}
             cor={d.cor}
+            ondaNegra={d.ondaNegra}
+            mesa={d.mesa}
           />
+
           {renderFooter?.({
             key: d.key,
             esteira: plano[d.key],
