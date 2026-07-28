@@ -238,6 +238,8 @@ export function EsteiraBoard({
   ilhasEsq = [...ILHAS_ESQ],
   ilhasDir = [...ILHAS_DIR],
   cor = "auto",
+  ondaNegra = true,
+  mesa = ["etiquetagem"],
 }: {
   value: EsteiraState;
   onChange: (e: EsteiraState) => void;
@@ -247,6 +249,8 @@ export function EsteiraBoard({
   ilhasEsq?: string[];
   ilhasDir?: string[];
   cor?: CorEsteira;
+  ondaNegra?: boolean;
+  mesa?: MesaGrupo[];
 }) {
   const ids = useMemo(() => [...ilhasEsq, ...ilhasDir], [ilhasEsq, ilhasDir]);
   const e = useMemo(() => normalizarEsteira(value, ids), [value, ids]);
