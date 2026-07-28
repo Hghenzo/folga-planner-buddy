@@ -135,7 +135,7 @@ export function ProducaoTab() {
       <ImportarCard />
 
       <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)} className="space-y-3">
-        <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-card/60">
+        <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-card/60">
           <TabsTrigger value="semana" className="rounded-xl text-xs">
             Semanal
           </TabsTrigger>
@@ -145,31 +145,42 @@ export function ProducaoTab() {
           <TabsTrigger value="ano" className="rounded-xl text-xs">
             Anual
           </TabsTrigger>
+          <TabsTrigger value="hist" className="rounded-xl text-xs">
+            Histórico
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={periodo} className="space-y-3">
-          <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Média da equipe
+          {periodo === "hist" ? (
+            <Historico linhas={linhas} carregando={isLoading} />
+          ) : (
+            <>
+              <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Média da equipe
+                  </div>
+                  <div className="text-xs font-semibold capitalize text-foreground">
+                    {range.rotulo}
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <Resumo titulo="Efetiva" valor={media(totais.map((t) => t.efetiva))} />
+                  <Resumo titulo="Líquida" valor={media(totais.map((t) => t.liquida))} />
+                  <Resumo titulo="Util. %" valor={media(totais.map((t) => t.utilizacao))} />
+                  <Resumo titulo="Pessoas" valor={totais.length} />
+                </div>
+                <p className="mt-2 text-center text-[10px] text-muted-foreground">
+                  Médias por pessoa · meta {META_PRODUTIVIDADE} de produtividade efetiva
+                </p>
               </div>
-              <div className="text-xs font-semibold capitalize text-foreground">{range.rotulo}</div>
-            </div>
-            <div className="grid grid-cols-4 gap-2 text-center">
-              <Resumo titulo="Efetiva" valor={media(totais.map((t) => t.efetiva))} />
-              <Resumo titulo="Líquida" valor={media(totais.map((t) => t.liquida))} />
-              <Resumo titulo="Util. %" valor={media(totais.map((t) => t.utilizacao))} />
-              <Resumo titulo="Pessoas" valor={totais.length} />
-            </div>
-            <p className="mt-2 text-center text-[10px] text-muted-foreground">
-              Médias por pessoa · meta {META_PRODUTIVIDADE} de produtividade efetiva
-            </p>
-          </div>
 
-
-          <RankingPessoas totais={totais} carregando={isLoading} />
+              <RankingPessoas totais={totais} carregando={isLoading} />
+            </>
+          )}
         </TabsContent>
       </Tabs>
+
     </div>
   );
 }
