@@ -1,39 +1,29 @@
-## Objetivo
+## 1. Lados invertidos (visão de quem induz)
 
-Transformar a aba **Esteira** em 4 esteiras (Full, Vermelha, Amarela, Verde), com controle de diaristas antes do planejamento automático, e deixar as cartinhas de avaliação maiores em grade de 5 por linha.
+Todas as esteiras trocam esquerda ↔ direita:
 
-## 1. As 4 esteiras
+- **Full** — o que estava à esquerda (11, 13, 15, 31–36, 40) passa para a direita, e o que estava à direita (12, 14, 16, 21–27) passa para a esquerda.
+- **Vermelha** — esquerda: 12, 14, 16 · direita: 11, 13, 15.
+- **Amarela** — esquerda: 22, 24, 26 · direita: 21, 23, 25, 27.
+- **Verde** — esquerda: 31, 33, 35, 32 · direita: 37, 34, 36.
 
-Cada esteira tem a mesma estrutura de hoje: Indução + Onda Negra em cima, ilhas nos dois lados, Goleiro embaixo.
+## 2. Mesa de ajuda no lugar da Onda Negra
 
-- **Full** — continua exatamente como está hoje (ilhas 11–40, layout atual).
-- **Vermelha** — ilhas 11–16: ímpares à esquerda (11, 13, 15), pares à direita (12, 14, 16). Cores neon vermelhas.
-- **Amarela** — ilhas 21–27: ímpares à esquerda (21, 23, 25, 27), pares à direita (22, 24, 26). Cores neon amarelas.
-- **Verde** — ilhas 31–37, ordem invertida: direita começa no 37 e desce (37, 35, 33, 31); esquerda desce até o 32 (36, 34, 32). Cores neon verdes.
+- **Vermelha, Amarela e Verde**: some a Onda Negra; entra **Mesa de ajuda** com três grupos — **Indução**, **Etiquetagem** e **Montador** (cada um com lista de nomes e botão de adicionar/remover, igual aos outros blocos).
+- **Full**: mantém a Onda Negra e ganha também uma **Mesa de ajuda**, só com **Etiquetagem**.
+- Planejamentos já salvos continuam abrindo normalmente (a mesa vem vazia quando não existir no dado antigo).
 
-Navegação entre elas por sub-abas dentro da aba Esteira (Full · Vermelha · Amarela · Verde), tanto na prévia quanto na tela de um planejamento salvo.
+## 3. Gerar planejamento não sobrescreve o que foi digitado
 
-## 2. Diaristas
+O botão de gerar automático passa a preencher **apenas os campos vazios**. Nome já colocado à mão (pesca, bipador, montador, goleiro, indução, mesa de ajuda) fica intacto, e as pessoas usadas nesses campos não são realocadas em outro lugar. Vale também para a distribuição de diaristas.
 
-- Campo numérico **"Diaristas hoje"** que aparece nas esteiras Vermelha, Amarela e Verde, acima do botão de gerar.
-- Ao gerar o planejamento automático, o sistema cria "Diarista 1, 2, 3…" conforme a quantidade e distribui com esta prioridade:
-  1. **Pesca** (pescador de cada ilha) primeiro;
-  2. se todas as pescas estiverem completas, o restante vai para a **Indução**;
-  3. diarista **nunca** entra em montagem (montadores) nem em goleiro/onda negra.
-- Só depois dos diaristas o sistema completa os slots restantes com o pessoal da escala (turma de folga fora), como já faz hoje.
-- Os slots de diarista ficam com um marcador visual discreto e continuam editáveis manualmente.
+## 4. Aba Histórico na Produção
 
-## 3. Cartinhas maiores (estilo FIFA)
-
-- Grade de **5 cartas por linha** em telas grandes, reduzindo para 3 / 2 / 1 conforme a tela encolhe.
-- Cartas mais altas e proporcionadas como carta de FIFA: overall e nome grandes no topo, divisória, e as 6 stats em duas colunas com números maiores. Sem foto.
-- Mantém os tiers de cor por overall (Bronze / Prata / Ouro / Icon) e o modo de edição atual.
+Nova sub-aba **Histórico** dentro de Produção: lista os dias já lançados (mais recente primeiro), com data, equipe e os números daquele dia por pessoa. Filtro por período e possibilidade de abrir um dia para ver a tabela completa.
 
 ## Detalhes técnicos
 
-- `src/lib/esteira.ts`: novo tipo `PlanoEsteiras = { full, vermelha, amarela, verde, diaristas }` com listas de ilhas por esteira (`ILHAS_VERMELHA_ESQ/DIR`, etc.). `normalizarEsteira` passa a aceitar o formato antigo (um único objeto) e migrá-lo para o campo `full`, sem migração de banco — a coluna `esteira` já é JSON.
-- Nova função `distribuirComDiaristas(esteira, nomes, qtdDiaristas)` que aplica a regra de prioridade antes da distribuição normal.
-- `src/components/esteira-board.tsx`: `EsteiraBoard` passa a receber as listas de ilhas por prop (esquerda/direita) e a cor neon fixa da esteira; um novo wrapper `EsteirasTabs` renderiza as 4.
-- `src/routes/_authenticated/app.tsx` e `planejamentos.$id.tsx`: usam o wrapper, salvam/carregam o objeto com as 4 esteiras e o número de diaristas.
-- `src/routes/api/chat.ts`: prompt da IA atualizado para o novo formato com 4 esteiras.
-- `src/components/avaliacoes-tab.tsx`: nova grade e estilo da carta.
+- `src/lib/esteira.ts`: inverter `esq`/`dir` em `ILHAS_ESQ/DIR` e nas defs vermelha/amarela/verde; verde esq = [31,33,35,32], dir = [37,34,36]. Novo campo `mesa_ajuda: { inducao: string[]; etiquetagem: string[]; montador: string[] }` em `EsteiraState`, normalizado em `normalizarEsteira` com fallback vazio. `distribuirNomes` e `distribuirComDiaristas` passam a respeitar slots preenchidos (já fazem parcialmente) e a incluir a mesa de ajuda na ordem de preenchimento.
+- `src/components/esteira-board.tsx`: bloco `MesaAjuda` renderizado por esteira; Onda Negra só na Full; grupos exibidos conforme a esteira (`etiquetagem` na Full; `inducao/etiquetagem/montador` nas coloridas).
+- `src/routes/api/chat.ts`: prompt atualizado com `mesa_ajuda` e a regra de não sobrescrever slots preenchidos.
+- `src/components/producao-tab.tsx`: nova `TabsTrigger` "Histórico" com listagem por data, usando uma função de leitura em `src/lib/producao.functions.ts` (agrupada por dia).
