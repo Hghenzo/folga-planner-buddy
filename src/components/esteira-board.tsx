@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import type { EsteiraKey, EsteiraState, IlhaSlots, PlanoEsteiras } from "@/lib/esteira";
+import type { EsteiraKey, EsteiraState, IlhaSlots, MesaGrupo, PlanoEsteiras } from "@/lib/esteira";
 import {
   ESTEIRAS,
   ILHAS_ESQ,
