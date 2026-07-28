@@ -275,11 +275,14 @@ export function distribuirNomes(base: EsteiraState, nomes: string[]): EsteiraSta
     }
   };
 
-  // Preenche primeiro indução, goleiros, onda negra, depois ilhas alternando lados
+  // Preenche primeiro indução, goleiros, onda negra e mesa de ajuda; depois ilhas
   preencherLista(e.inducao);
   preencherLista(e.goleiros);
   preencherLista(e.onda_negra.pesca);
   preencherLista(e.onda_negra.monta);
+  preencherLista(e.mesa_ajuda.inducao);
+  preencherLista(e.mesa_ajuda.etiquetagem);
+  preencherLista(e.mesa_ajuda.montador);
 
   const ordem = ordemIlhas(e, ids);
   if (!ordem.length) return e;
