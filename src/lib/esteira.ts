@@ -1,21 +1,22 @@
-// Estrutura da esteira (baseada no print e na descrição do usuário)
+// Estrutura da esteira (lados na visão de quem está induzindo)
 
 /** Esteira Full (todas as ilhas) */
-export const ILHAS_ESQ = ["11", "13", "15", "31", "32", "33", "34", "35", "36", "40"] as const;
-export const ILHAS_DIR = ["12", "14", "16", "21", "22", "23", "24", "25", "26", "27"] as const;
+export const ILHAS_ESQ = ["12", "14", "16", "21", "22", "23", "24", "25", "26", "27"] as const;
+export const ILHAS_DIR = ["11", "13", "15", "31", "32", "33", "34", "35", "36", "40"] as const;
 export const TODAS_ILHAS = [...ILHAS_ESQ, ...ILHAS_DIR];
 
-/** Esteira vermelha: 11–16, ímpares à esquerda / pares à direita */
-export const ILHAS_VERMELHA_ESQ = ["11", "13", "15"];
-export const ILHAS_VERMELHA_DIR = ["12", "14", "16"];
+/** Esteira vermelha: 11–16 */
+export const ILHAS_VERMELHA_ESQ = ["12", "14", "16"];
+export const ILHAS_VERMELHA_DIR = ["11", "13", "15"];
 
-/** Esteira amarela: 21–27, ímpares à esquerda / pares à direita */
-export const ILHAS_AMARELA_ESQ = ["21", "23", "25", "27"];
-export const ILHAS_AMARELA_DIR = ["22", "24", "26"];
+/** Esteira amarela: 21–27 */
+export const ILHAS_AMARELA_ESQ = ["22", "24", "26"];
+export const ILHAS_AMARELA_DIR = ["21", "23", "25", "27"];
 
-/** Esteira verde: 31–37 invertida — direita começa no 37, esquerda termina no 32 */
-export const ILHAS_VERDE_DIR = ["37", "35", "33", "31"];
-export const ILHAS_VERDE_ESQ = ["36", "34", "32"];
+/** Esteira verde: 31–37 */
+export const ILHAS_VERDE_ESQ = ["31", "33", "35", "32"];
+export const ILHAS_VERDE_DIR = ["37", "34", "36"];
+
 
 export type EsteiraKey = "full" | "vermelha" | "amarela" | "verde";
 
