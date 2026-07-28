@@ -222,6 +222,9 @@ export function nomesUsados(e: EsteiraState): string[] {
     ...(e.inducao ?? []),
     ...(e.onda_negra?.pesca ?? []),
     ...(e.onda_negra?.monta ?? []),
+    ...(e.mesa_ajuda?.inducao ?? []),
+    ...(e.mesa_ajuda?.etiquetagem ?? []),
+    ...(e.mesa_ajuda?.montador ?? []),
   );
   return out.map((s) => (s ?? "").trim()).filter(Boolean);
 }
