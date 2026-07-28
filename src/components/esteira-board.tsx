@@ -445,7 +445,8 @@ export function EsteirasTabs({
 
   function gerar(key: EsteiraKey) {
     const def = esteiraDef(key);
-    const base = esteiraVazia(ilhasDe(key));
+    // mantém o que já foi preenchido manualmente; só completa os vazios
+    const base = normalizarEsteira(plano[key], ilhasDe(key));
     const nova = def.diaristas
       ? distribuirComDiaristas(base, disponiveis, plano.diaristas)
       : distribuirNomes(base, disponiveis);
