@@ -28,7 +28,7 @@ import {
 } from "@/lib/producao.functions";
 
 
-type Periodo = "semana" | "mes" | "ano";
+type Periodo = "semana" | "mes" | "ano" | "hist";
 
 function iso(d: Date) {
   return d.toISOString().slice(0, 10);
