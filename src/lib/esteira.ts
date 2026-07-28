@@ -97,6 +97,8 @@ export type IlhaSlots = {
   montadores: string[];
 };
 
+export type MesaAjuda = { inducao: string[]; etiquetagem: string[]; montador: string[] };
+
 export type EsteiraState = {
   ilhas: Record<string, IlhaSlots>;
   /** Goleiros (quantidade livre) */
@@ -104,6 +106,8 @@ export type EsteiraState = {
   /** Indutores (quantidade livre) */
   inducao: string[];
   onda_negra: { pesca: string[]; monta: string[] };
+  /** Mesa de ajuda */
+  mesa_ajuda: MesaAjuda;
 };
 
 /** Conjunto das 4 esteiras salvas em um planejamento */
@@ -126,6 +130,7 @@ export function esteiraVazia(ilhasIds: readonly string[] = TODAS_ILHAS): Esteira
     goleiros: ["", ""],
     inducao: [""],
     onda_negra: { pesca: [""], monta: [""] },
+    mesa_ajuda: { inducao: [""], etiquetagem: [""], montador: [""] },
   };
 }
 
