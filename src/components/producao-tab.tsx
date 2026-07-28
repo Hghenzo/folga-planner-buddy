@@ -37,6 +37,11 @@ function iso(d: Date) {
 /** Semana de segunda a domingo (fechamento no domingo). */
 function intervalo(p: Periodo, base = new Date()): { de: string; ate: string; rotulo: string } {
   const d = new Date(base);
+  if (p === "hist") {
+    const ini = new Date(d);
+    ini.setDate(d.getDate() - 180);
+    return { de: iso(ini), ate: iso(d), rotulo: "Últimos 180 dias" };
+  }
   if (p === "semana") {
     const dow = (d.getDay() + 6) % 7; // 0 = segunda
     const ini = new Date(d);
