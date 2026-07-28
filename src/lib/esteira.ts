@@ -20,6 +20,8 @@ export const ILHAS_VERDE_DIR = ["37", "34", "36"];
 
 export type EsteiraKey = "full" | "vermelha" | "amarela" | "verde";
 
+export type MesaGrupo = "inducao" | "etiquetagem" | "montador";
+
 export type EsteiraDef = {
   key: EsteiraKey;
   nome: string;
@@ -29,10 +31,23 @@ export type EsteiraDef = {
   cor: "auto" | "red" | "yellow" | "green";
   /** esteiras com diaristas */
   diaristas: boolean;
+  /** só a Full tem onda negra */
+  ondaNegra: boolean;
+  /** grupos exibidos na mesa de ajuda */
+  mesa: MesaGrupo[];
 };
 
 export const ESTEIRAS: EsteiraDef[] = [
-  { key: "full", nome: "Full", esq: [...ILHAS_ESQ], dir: [...ILHAS_DIR], cor: "auto", diaristas: false },
+  {
+    key: "full",
+    nome: "Full",
+    esq: [...ILHAS_ESQ],
+    dir: [...ILHAS_DIR],
+    cor: "auto",
+    diaristas: false,
+    ondaNegra: true,
+    mesa: ["etiquetagem"],
+  },
   {
     key: "vermelha",
     nome: "Vermelha",
@@ -40,6 +55,8 @@ export const ESTEIRAS: EsteiraDef[] = [
     dir: ILHAS_VERMELHA_DIR,
     cor: "red",
     diaristas: true,
+    ondaNegra: false,
+    mesa: ["inducao", "etiquetagem", "montador"],
   },
   {
     key: "amarela",
@@ -48,6 +65,8 @@ export const ESTEIRAS: EsteiraDef[] = [
     dir: ILHAS_AMARELA_DIR,
     cor: "yellow",
     diaristas: true,
+    ondaNegra: false,
+    mesa: ["inducao", "etiquetagem", "montador"],
   },
   {
     key: "verde",
@@ -56,6 +75,8 @@ export const ESTEIRAS: EsteiraDef[] = [
     dir: ILHAS_VERDE_DIR,
     cor: "green",
     diaristas: true,
+    ondaNegra: false,
+    mesa: ["inducao", "etiquetagem", "montador"],
   },
 ];
 
