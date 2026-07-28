@@ -323,26 +323,49 @@ export function EsteiraBoard({
           valores={e.inducao}
           onList={(v) => upd({ ...e, inducao: v })}
         />
-        <div className="mt-3 rounded-xl border border-dashed border-brand-purple/60 bg-brand-purple/5 p-3">
-          <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
-            Onda Negra
+        {ondaNegra && (
+          <div className="mt-3 rounded-xl border border-dashed border-brand-purple/60 bg-brand-purple/5 p-3">
+            <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
+              Onda Negra
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <ListaSlots
+                label="Pesca"
+                cols={1}
+                valores={e.onda_negra.pesca}
+                onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, pesca: v } })}
+              />
+              <ListaSlots
+                label="Monta"
+                cols={1}
+                valores={e.onda_negra.monta}
+                onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, monta: v } })}
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <ListaSlots
-              label="Pesca"
-              cols={1}
-              valores={e.onda_negra.pesca}
-              onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, pesca: v } })}
-            />
-            <ListaSlots
-              label="Monta"
-              cols={1}
-              valores={e.onda_negra.monta}
-              onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, monta: v } })}
-            />
+        )}
+        {mesa.length > 0 && (
+          <div className="mt-3 rounded-xl border border-dashed border-brand-cyan/60 bg-brand-cyan/5 p-3">
+            <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-cyan">
+              Mesa de ajuda
+            </div>
+            <div className={mesa.length > 1 ? "grid grid-cols-3 gap-2" : ""}>
+              {mesa.map((g) => (
+                <ListaSlots
+                  key={g}
+                  label={
+                    g === "inducao" ? "Indução" : g === "etiquetagem" ? "Etiquetagem" : "Montador"
+                  }
+                  cols={1}
+                  valores={e.mesa_ajuda[g]}
+                  onList={(v) => upd({ ...e, mesa_ajuda: { ...e.mesa_ajuda, [g]: v } })}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
 
       {/* Esteira principal */}
       <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
