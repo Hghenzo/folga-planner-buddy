@@ -8,7 +8,7 @@ import {
   distribuirNomes,
   ehDiarista,
   esteiraDef,
-  esteiraVazia,
+  
   ilhasDe,
   normalizarEsteira,
   normalizarPlano,
