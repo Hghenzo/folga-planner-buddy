@@ -174,6 +174,7 @@ export function normalizarEsteira(
     };
   }
   const onda = (e.onda_negra ?? {}) as Record<string, unknown>;
+  const mesa = (e.mesa_ajuda ?? {}) as Record<string, unknown>;
   return {
     ilhas,
     goleiros: lista(e.goleiros, 2),
@@ -181,6 +182,11 @@ export function normalizarEsteira(
     onda_negra: {
       pesca: lista(onda.pesca, 1),
       monta: lista(onda.monta, 1),
+    },
+    mesa_ajuda: {
+      inducao: lista(mesa.inducao, 1),
+      etiquetagem: lista(mesa.etiquetagem, 1),
+      montador: lista(mesa.montador, 1),
     },
   };
 }
