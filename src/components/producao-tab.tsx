@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, Plus, Trophy, Users, Loader2, Save } from "lucide-react";
+import { Upload, Plus, Trophy, Users, Loader2, Save, CalendarDays } from "lucide-react";
 import {
   META_PRODUTIVIDADE,
   importarProducao,
