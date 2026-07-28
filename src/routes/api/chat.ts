@@ -20,9 +20,10 @@ export const Route = createFileRoute("/api/chat")({
         const ilhas = Object.keys(esteira?.ilhas ?? {});
         const idsValidos = ilhas.length ? ilhas : TODAS_ILHAS;
         const sys = `Você é um assistente que edita um planejamento de esteira de trabalho.
-Estrutura da esteira (JSON): { ilhas: Record<string, { pescador, bipador_1, bipador_2, montadores: string[] }>, goleiros: string[], inducao: string[], onda_negra: { pesca: string[], monta: string[] } }.
+Estrutura da esteira (JSON): { ilhas: Record<string, { pescador, bipador_1, bipador_2, montadores: string[] }>, goleiros: string[], inducao: string[], onda_negra: { pesca: string[], monta: string[] }, mesa_ajuda: { inducao: string[], etiquetagem: string[], montador: string[] } }.
 IDs de ilhas válidos (use apenas estes, é a esteira aberta agora): ${idsValidos.join(", ")}.
-Cada slot de ilha é uma string com um nome (vazio "" se desocupado); goleiros, inducao e onda_negra são listas de nomes (podem ter quantas pessoas forem necessárias).
+Cada slot de ilha é uma string com um nome (vazio "" se desocupado); goleiros, inducao, onda_negra e mesa_ajuda são listas de nomes (podem ter quantas pessoas forem necessárias).
+NUNCA remova ou troque um nome que já está preenchido, a não ser que o usuário peça explicitamente; preencha apenas os campos vazios.
 Pessoas disponíveis: ${(body.disponiveis ?? []).join(", ") || "(nenhuma)"}.
 Nomes que começam com "Diarista" são diaristas: só podem ocupar pesca (pescador da ilha) ou indução — nunca montagem, bipador, goleiro ou onda negra.
 Esteira atual: ${JSON.stringify(esteira)}.

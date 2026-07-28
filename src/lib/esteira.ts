@@ -1,23 +1,26 @@
-// Estrutura da esteira (baseada no print e na descrição do usuário)
+// Estrutura da esteira (lados na visão de quem está induzindo)
 
 /** Esteira Full (todas as ilhas) */
-export const ILHAS_ESQ = ["11", "13", "15", "31", "32", "33", "34", "35", "36", "40"] as const;
-export const ILHAS_DIR = ["12", "14", "16", "21", "22", "23", "24", "25", "26", "27"] as const;
+export const ILHAS_ESQ = ["12", "14", "16", "21", "22", "23", "24", "25", "26", "27"] as const;
+export const ILHAS_DIR = ["11", "13", "15", "31", "32", "33", "34", "35", "36", "40"] as const;
 export const TODAS_ILHAS = [...ILHAS_ESQ, ...ILHAS_DIR];
 
-/** Esteira vermelha: 11–16, ímpares à esquerda / pares à direita */
-export const ILHAS_VERMELHA_ESQ = ["11", "13", "15"];
-export const ILHAS_VERMELHA_DIR = ["12", "14", "16"];
+/** Esteira vermelha: 11–16 */
+export const ILHAS_VERMELHA_ESQ = ["12", "14", "16"];
+export const ILHAS_VERMELHA_DIR = ["11", "13", "15"];
 
-/** Esteira amarela: 21–27, ímpares à esquerda / pares à direita */
-export const ILHAS_AMARELA_ESQ = ["21", "23", "25", "27"];
-export const ILHAS_AMARELA_DIR = ["22", "24", "26"];
+/** Esteira amarela: 21–27 */
+export const ILHAS_AMARELA_ESQ = ["22", "24", "26"];
+export const ILHAS_AMARELA_DIR = ["21", "23", "25", "27"];
 
-/** Esteira verde: 31–37 invertida — direita começa no 37, esquerda termina no 32 */
-export const ILHAS_VERDE_DIR = ["37", "35", "33", "31"];
-export const ILHAS_VERDE_ESQ = ["36", "34", "32"];
+/** Esteira verde: 31–37 */
+export const ILHAS_VERDE_ESQ = ["31", "33", "35", "32"];
+export const ILHAS_VERDE_DIR = ["37", "34", "36"];
+
 
 export type EsteiraKey = "full" | "vermelha" | "amarela" | "verde";
+
+export type MesaGrupo = "inducao" | "etiquetagem" | "montador";
 
 export type EsteiraDef = {
   key: EsteiraKey;
@@ -28,10 +31,23 @@ export type EsteiraDef = {
   cor: "auto" | "red" | "yellow" | "green";
   /** esteiras com diaristas */
   diaristas: boolean;
+  /** só a Full tem onda negra */
+  ondaNegra: boolean;
+  /** grupos exibidos na mesa de ajuda */
+  mesa: MesaGrupo[];
 };
 
 export const ESTEIRAS: EsteiraDef[] = [
-  { key: "full", nome: "Full", esq: [...ILHAS_ESQ], dir: [...ILHAS_DIR], cor: "auto", diaristas: false },
+  {
+    key: "full",
+    nome: "Full",
+    esq: [...ILHAS_ESQ],
+    dir: [...ILHAS_DIR],
+    cor: "auto",
+    diaristas: false,
+    ondaNegra: true,
+    mesa: ["etiquetagem"],
+  },
   {
     key: "vermelha",
     nome: "Vermelha",
@@ -39,6 +55,8 @@ export const ESTEIRAS: EsteiraDef[] = [
     dir: ILHAS_VERMELHA_DIR,
     cor: "red",
     diaristas: true,
+    ondaNegra: false,
+    mesa: ["inducao", "etiquetagem", "montador"],
   },
   {
     key: "amarela",
@@ -47,6 +65,8 @@ export const ESTEIRAS: EsteiraDef[] = [
     dir: ILHAS_AMARELA_DIR,
     cor: "yellow",
     diaristas: true,
+    ondaNegra: false,
+    mesa: ["inducao", "etiquetagem", "montador"],
   },
   {
     key: "verde",
@@ -55,6 +75,8 @@ export const ESTEIRAS: EsteiraDef[] = [
     dir: ILHAS_VERDE_DIR,
     cor: "green",
     diaristas: true,
+    ondaNegra: false,
+    mesa: ["inducao", "etiquetagem", "montador"],
   },
 ];
 
@@ -75,6 +97,8 @@ export type IlhaSlots = {
   montadores: string[];
 };
 
+export type MesaAjuda = { inducao: string[]; etiquetagem: string[]; montador: string[] };
+
 export type EsteiraState = {
   ilhas: Record<string, IlhaSlots>;
   /** Goleiros (quantidade livre) */
@@ -82,6 +106,8 @@ export type EsteiraState = {
   /** Indutores (quantidade livre) */
   inducao: string[];
   onda_negra: { pesca: string[]; monta: string[] };
+  /** Mesa de ajuda */
+  mesa_ajuda: MesaAjuda;
 };
 
 /** Conjunto das 4 esteiras salvas em um planejamento */
@@ -104,6 +130,7 @@ export function esteiraVazia(ilhasIds: readonly string[] = TODAS_ILHAS): Esteira
     goleiros: ["", ""],
     inducao: [""],
     onda_negra: { pesca: [""], monta: [""] },
+    mesa_ajuda: { inducao: [""], etiquetagem: [""], montador: [""] },
   };
 }
 
@@ -147,6 +174,7 @@ export function normalizarEsteira(
     };
   }
   const onda = (e.onda_negra ?? {}) as Record<string, unknown>;
+  const mesa = (e.mesa_ajuda ?? {}) as Record<string, unknown>;
   return {
     ilhas,
     goleiros: lista(e.goleiros, 2),
@@ -154,6 +182,11 @@ export function normalizarEsteira(
     onda_negra: {
       pesca: lista(onda.pesca, 1),
       monta: lista(onda.monta, 1),
+    },
+    mesa_ajuda: {
+      inducao: lista(mesa.inducao, 1),
+      etiquetagem: lista(mesa.etiquetagem, 1),
+      montador: lista(mesa.montador, 1),
     },
   };
 }
@@ -189,6 +222,9 @@ export function nomesUsados(e: EsteiraState): string[] {
     ...(e.inducao ?? []),
     ...(e.onda_negra?.pesca ?? []),
     ...(e.onda_negra?.monta ?? []),
+    ...(e.mesa_ajuda?.inducao ?? []),
+    ...(e.mesa_ajuda?.etiquetagem ?? []),
+    ...(e.mesa_ajuda?.montador ?? []),
   );
   return out.map((s) => (s ?? "").trim()).filter(Boolean);
 }
@@ -239,11 +275,14 @@ export function distribuirNomes(base: EsteiraState, nomes: string[]): EsteiraSta
     }
   };
 
-  // Preenche primeiro indução, goleiros, onda negra, depois ilhas alternando lados
+  // Preenche primeiro indução, goleiros, onda negra e mesa de ajuda; depois ilhas
   preencherLista(e.inducao);
   preencherLista(e.goleiros);
   preencherLista(e.onda_negra.pesca);
   preencherLista(e.onda_negra.monta);
+  preencherLista(e.mesa_ajuda.inducao);
+  preencherLista(e.mesa_ajuda.etiquetagem);
+  preencherLista(e.mesa_ajuda.montador);
 
   const ordem = ordemIlhas(e, ids);
   if (!ordem.length) return e;

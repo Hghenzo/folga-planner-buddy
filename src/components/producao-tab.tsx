@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, Plus, Trophy, Users, Loader2, Save } from "lucide-react";
+import { Upload, Plus, Trophy, Users, Loader2, Save, CalendarDays } from "lucide-react";
 import {
   META_PRODUTIVIDADE,
   importarProducao,
@@ -28,7 +28,7 @@ import {
 } from "@/lib/producao.functions";
 
 
-type Periodo = "semana" | "mes" | "ano";
+type Periodo = "semana" | "mes" | "ano" | "hist";
 
 function iso(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -37,6 +37,11 @@ function iso(d: Date) {
 /** Semana de segunda a domingo (fechamento no domingo). */
 function intervalo(p: Periodo, base = new Date()): { de: string; ate: string; rotulo: string } {
   const d = new Date(base);
+  if (p === "hist") {
+    const ini = new Date(d);
+    ini.setDate(d.getDate() - 180);
+    return { de: iso(ini), ate: iso(d), rotulo: "Últimos 180 dias" };
+  }
   if (p === "semana") {
     const dow = (d.getDay() + 6) % 7; // 0 = segunda
     const ini = new Date(d);
@@ -130,7 +135,7 @@ export function ProducaoTab() {
       <ImportarCard />
 
       <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)} className="space-y-3">
-        <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-card/60">
+        <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-card/60">
           <TabsTrigger value="semana" className="rounded-xl text-xs">
             Semanal
           </TabsTrigger>
@@ -140,31 +145,42 @@ export function ProducaoTab() {
           <TabsTrigger value="ano" className="rounded-xl text-xs">
             Anual
           </TabsTrigger>
+          <TabsTrigger value="hist" className="rounded-xl text-xs">
+            Histórico
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={periodo} className="space-y-3">
-          <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Média da equipe
+          {periodo === "hist" ? (
+            <Historico linhas={linhas} carregando={isLoading} />
+          ) : (
+            <>
+              <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Média da equipe
+                  </div>
+                  <div className="text-xs font-semibold capitalize text-foreground">
+                    {range.rotulo}
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <Resumo titulo="Efetiva" valor={media(totais.map((t) => t.efetiva))} />
+                  <Resumo titulo="Líquida" valor={media(totais.map((t) => t.liquida))} />
+                  <Resumo titulo="Util. %" valor={media(totais.map((t) => t.utilizacao))} />
+                  <Resumo titulo="Pessoas" valor={totais.length} />
+                </div>
+                <p className="mt-2 text-center text-[10px] text-muted-foreground">
+                  Médias por pessoa · meta {META_PRODUTIVIDADE} de produtividade efetiva
+                </p>
               </div>
-              <div className="text-xs font-semibold capitalize text-foreground">{range.rotulo}</div>
-            </div>
-            <div className="grid grid-cols-4 gap-2 text-center">
-              <Resumo titulo="Efetiva" valor={media(totais.map((t) => t.efetiva))} />
-              <Resumo titulo="Líquida" valor={media(totais.map((t) => t.liquida))} />
-              <Resumo titulo="Util. %" valor={media(totais.map((t) => t.utilizacao))} />
-              <Resumo titulo="Pessoas" valor={totais.length} />
-            </div>
-            <p className="mt-2 text-center text-[10px] text-muted-foreground">
-              Médias por pessoa · meta {META_PRODUTIVIDADE} de produtividade efetiva
-            </p>
-          </div>
 
-
-          <RankingPessoas totais={totais} carregando={isLoading} />
+              <RankingPessoas totais={totais} carregando={isLoading} />
+            </>
+          )}
         </TabsContent>
       </Tabs>
+
     </div>
   );
 }
@@ -179,6 +195,121 @@ function Resumo({ titulo, valor }: { titulo: string; valor: number }) {
     </div>
   );
 }
+
+/** Histórico: dias lançados, do mais recente para o mais antigo. */
+function Historico({ linhas, carregando }: { linhas: LinhaProducao[]; carregando: boolean }) {
+  const [aberto, setAberto] = useState<string | null>(null);
+
+  const dias = useMemo(() => {
+    const m = new Map<string, LinhaProducao[]>();
+    for (const l of linhas) {
+      const arr = m.get(l.data) ?? [];
+      arr.push(l);
+      m.set(l.data, arr);
+    }
+    return [...m.entries()]
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([data, itens]) => ({
+        data,
+        itens: [...itens].sort(
+          (a, b) => Number(b.produtividade_efetiva) - Number(a.produtividade_efetiva),
+        ),
+        efetiva: media(itens.map((i) => Number(i.produtividade_efetiva ?? 0))),
+        unidades: itens.reduce((s, i) => s + Number(i.unidades ?? 0), 0),
+      }));
+  }, [linhas]);
+
+  if (carregando) {
+    return (
+      <div className="rounded-2xl border border-border/70 bg-card/40 p-6 text-center text-xs text-muted-foreground">
+        Carregando…
+      </div>
+    );
+  }
+  if (!dias.length) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-6 text-center text-xs text-muted-foreground">
+        Nenhum dia lançado ainda.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {dias.map((d) => {
+        const open = aberto === d.data;
+        return (
+          <div
+            key={d.data}
+            className="overflow-hidden rounded-2xl border border-border/70 bg-[image:var(--gradient-card)]"
+          >
+            <button
+              type="button"
+              onClick={() => setAberto(open ? null : d.data)}
+              className="flex w-full items-center gap-2 p-3 text-left"
+            >
+              <CalendarDays className="h-4 w-4 text-brand-cyan" />
+              <div className="flex-1">
+                <div className="text-xs font-black">
+                  {new Date(d.data + "T00:00:00").toLocaleDateString("pt-BR", {
+                    weekday: "short",
+                    day: "2-digit",
+                    month: "2-digit",
+                  })}
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  {d.itens.length} pessoa(s) · efetiva média {Math.round(d.efetiva)} ·{" "}
+                  {d.unidades.toLocaleString("pt-BR")} un.
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase text-muted-foreground">
+                {open ? "fechar" : "ver"}
+              </span>
+            </button>
+            {open && (
+              <div className="overflow-x-auto border-t border-border/50">
+                <table className="w-full text-left text-xs">
+                  <thead className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <tr>
+                      <th className="p-2">Nome</th>
+                      <th className="p-2 text-right">Unid.</th>
+                      <th className="p-2 text-right">Efetiva</th>
+                      <th className="p-2 text-right">Líquida</th>
+                      <th className="p-2 text-right">Util.</th>
+                      <th className="p-2 text-right">Ocioso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {d.itens.map((l) => (
+                      <tr key={l.id} className="border-t border-border/40">
+                        <td className="p-2 font-semibold">{l.nome}</td>
+                        <td className="p-2 text-right">
+                          {Number(l.unidades ?? 0).toLocaleString("pt-BR")}
+                        </td>
+                        <td className="p-2 text-right">
+                          {Math.round(Number(l.produtividade_efetiva ?? 0))}
+                        </td>
+                        <td className="p-2 text-right">
+                          {Math.round(Number(l.produtividade_liquida ?? 0))}
+                        </td>
+                        <td className="p-2 text-right">{Math.round(Number(l.utilizacao ?? 0))}%</td>
+                        <td className="p-2 text-right">
+                          {Math.round(Number(l.tempo_ocioso ?? 0))} min
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
 
 function EquipeCard() {
   const obter = useServerFn(obterEquipe);

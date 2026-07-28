@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import type { EsteiraKey, EsteiraState, IlhaSlots, PlanoEsteiras } from "@/lib/esteira";
+import type { EsteiraKey, EsteiraState, IlhaSlots, MesaGrupo, PlanoEsteiras } from "@/lib/esteira";
 import {
   ESTEIRAS,
   ILHAS_ESQ,
@@ -8,7 +8,7 @@ import {
   distribuirNomes,
   ehDiarista,
   esteiraDef,
-  esteiraVazia,
+  
   ilhasDe,
   normalizarEsteira,
   normalizarPlano,
@@ -238,6 +238,8 @@ export function EsteiraBoard({
   ilhasEsq = [...ILHAS_ESQ],
   ilhasDir = [...ILHAS_DIR],
   cor = "auto",
+  ondaNegra = true,
+  mesa = ["etiquetagem"],
 }: {
   value: EsteiraState;
   onChange: (e: EsteiraState) => void;
@@ -247,6 +249,8 @@ export function EsteiraBoard({
   ilhasEsq?: string[];
   ilhasDir?: string[];
   cor?: CorEsteira;
+  ondaNegra?: boolean;
+  mesa?: MesaGrupo[];
 }) {
   const ids = useMemo(() => [...ilhasEsq, ...ilhasDir], [ilhasEsq, ilhasDir]);
   const e = useMemo(() => normalizarEsteira(value, ids), [value, ids]);
@@ -319,26 +323,49 @@ export function EsteiraBoard({
           valores={e.inducao}
           onList={(v) => upd({ ...e, inducao: v })}
         />
-        <div className="mt-3 rounded-xl border border-dashed border-brand-purple/60 bg-brand-purple/5 p-3">
-          <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
-            Onda Negra
+        {ondaNegra && (
+          <div className="mt-3 rounded-xl border border-dashed border-brand-purple/60 bg-brand-purple/5 p-3">
+            <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-purple">
+              Onda Negra
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <ListaSlots
+                label="Pesca"
+                cols={1}
+                valores={e.onda_negra.pesca}
+                onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, pesca: v } })}
+              />
+              <ListaSlots
+                label="Monta"
+                cols={1}
+                valores={e.onda_negra.monta}
+                onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, monta: v } })}
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <ListaSlots
-              label="Pesca"
-              cols={1}
-              valores={e.onda_negra.pesca}
-              onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, pesca: v } })}
-            />
-            <ListaSlots
-              label="Monta"
-              cols={1}
-              valores={e.onda_negra.monta}
-              onList={(v) => upd({ ...e, onda_negra: { ...e.onda_negra, monta: v } })}
-            />
+        )}
+        {mesa.length > 0 && (
+          <div className="mt-3 rounded-xl border border-dashed border-brand-cyan/60 bg-brand-cyan/5 p-3">
+            <div className="mb-2 text-center text-[11px] font-black uppercase tracking-widest text-brand-cyan">
+              Mesa de ajuda
+            </div>
+            <div className={mesa.length > 1 ? "grid grid-cols-3 gap-2" : ""}>
+              {mesa.map((g) => (
+                <ListaSlots
+                  key={g}
+                  label={
+                    g === "inducao" ? "Indução" : g === "etiquetagem" ? "Etiquetagem" : "Montador"
+                  }
+                  cols={1}
+                  valores={e.mesa_ajuda[g]}
+                  onList={(v) => upd({ ...e, mesa_ajuda: { ...e.mesa_ajuda, [g]: v } })}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
 
       {/* Esteira principal */}
       <div className="rounded-2xl border border-border/70 bg-[image:var(--gradient-card)] p-3">
@@ -418,7 +445,8 @@ export function EsteirasTabs({
 
   function gerar(key: EsteiraKey) {
     const def = esteiraDef(key);
-    const base = esteiraVazia(ilhasDe(key));
+    // mantém o que já foi preenchido manualmente; só completa os vazios
+    const base = normalizarEsteira(plano[key], ilhasDe(key));
     const nova = def.diaristas
       ? distribuirComDiaristas(base, disponiveis, plano.diaristas)
       : distribuirNomes(base, disponiveis);
@@ -466,10 +494,11 @@ export function EsteirasTabs({
               </Button>
             </div>
           )}
-          {d.diaristas && !readOnly && (
+          {!readOnly && (
             <p className="px-1 text-[11px] text-muted-foreground">
-              Diaristas entram primeiro na pesca; se as pescas encherem, o restante vai para a
-              indução. Diarista nunca fica na montagem.
+              Gerar completa só os campos vazios — nomes já colocados não são trocados.
+              {d.diaristas &&
+                " Diaristas entram primeiro na pesca; o restante vai para a indução, nunca na montagem."}
             </p>
           )}
           <EsteiraBoard
@@ -481,7 +510,10 @@ export function EsteirasTabs({
             ilhasEsq={d.esq}
             ilhasDir={d.dir}
             cor={d.cor}
+            ondaNegra={d.ondaNegra}
+            mesa={d.mesa}
           />
+
           {renderFooter?.({
             key: d.key,
             esteira: plano[d.key],
