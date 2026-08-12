@@ -101,11 +101,61 @@ export function AuthForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {modo === "cadastro" && (
-            <div>
-              <Label htmlFor="nome">Nome</Label>
-              <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} className="mt-1.5" />
-            </div>
+            <>
+              <div>
+                <Label htmlFor="nome">Nome</Label>
+                <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} className="mt-1.5" />
+              </div>
+              <div>
+                <Label>Esteira</Label>
+                <Select value={esteira} onValueChange={(v) => setEsteira(v as EsteiraPerfil)}>
+                  <SelectTrigger className="mt-1.5 h-11 rounded-xl bg-input/60">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ESTEIRAS.map((e) => (
+                      <SelectItem key={e} value={e}>
+                        {ROTULO_ESTEIRA[e]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Cargo</Label>
+                  <Select value={cargo} onValueChange={(v) => setCargo(v as Cargo)}>
+                    <SelectTrigger className="mt-1.5 h-11 rounded-xl bg-input/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CARGOS.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {ROTULO_CARGO[c]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Turno</Label>
+                  <Select value={turno} onValueChange={(v) => setTurno(v as Turno)}>
+                    <SelectTrigger className="mt-1.5 h-11 rounded-xl bg-input/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TURNOS.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </>
           )}
+
           <div>
             <Label htmlFor="email">Email</Label>
             <Input
