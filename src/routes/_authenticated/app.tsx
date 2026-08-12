@@ -220,7 +220,7 @@ function PlanejamentosLista({ somenteLeitura = false }: { somenteLeitura?: boole
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <NovoPlanejamentoDialog />
+        {!somenteLeitura && <NovoPlanejamentoDialog />}
         <div className="flex flex-1 gap-2">
           <Input
             value={codigo}
