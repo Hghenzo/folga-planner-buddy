@@ -433,17 +433,22 @@ function EsteiraPreview({ somenteLeitura = false }: { somenteLeitura?: boolean }
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-border/60 bg-card/40 p-4 text-xs text-muted-foreground">
         <span>
           Prévia das esteiras (folga de hoje: <b>Turma {turmaFolga ?? "—"}</b>).
+          {somenteLeitura && " Somente leitura (Rep)."}
         </span>
-        <Button onClick={salvar} disabled={salvando} variant="outline" className="h-10 rounded-xl">
-          <Plus className="mr-2 h-4 w-4" /> Salvar planejamento
-        </Button>
+        {!somenteLeitura && (
+          <Button onClick={salvar} disabled={salvando} variant="outline" className="h-10 rounded-xl">
+            <Plus className="mr-2 h-4 w-4" /> Salvar planejamento
+          </Button>
+        )}
       </div>
-      <EsteirasTabs
-        value={plano}
-        onChange={setPlano}
-        disponiveis={disponiveis}
-        emFolga={emFolga}
-      />
+      <div className={somenteLeitura ? "pointer-events-none opacity-90" : undefined}>
+        <EsteirasTabs
+          value={plano}
+          onChange={setPlano}
+          disponiveis={disponiveis}
+          emFolga={emFolga}
+        />
+      </div>
     </div>
   );
 }
