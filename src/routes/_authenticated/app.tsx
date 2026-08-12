@@ -404,7 +404,7 @@ export function usarEscalaDoDia(iso: string) {
   return { disponiveis, emFolga, turmaFolga };
 }
 
-function EsteiraPreview() {
+function EsteiraPreview({ somenteLeitura = false }: { somenteLeitura?: boolean }) {
   const hojeIso = new Date().toISOString().slice(0, 10);
   const [plano, setPlano] = useState(planoVazio());
   const [salvando, setSalvando] = useState(false);
