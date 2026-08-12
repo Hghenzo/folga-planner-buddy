@@ -119,7 +119,7 @@ function fileToDataUrl(f: File) {
   });
 }
 
-export function ProducaoTab() {
+export function ProducaoTab({ podeLancar = true }: { podeLancar?: boolean }) {
   const [periodo, setPeriodo] = useState<Periodo>("semana");
   const range = useMemo(() => intervalo(periodo), [periodo]);
   const listar = useServerFn(listarProducao);
@@ -131,8 +131,17 @@ export function ProducaoTab() {
 
   return (
     <div className="space-y-3">
-      <EquipeCard />
-      <ImportarCard />
+      {podeLancar ? (
+        <>
+          <EquipeCard />
+          <ImportarCard />
+        </>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-4 text-center text-xs text-muted-foreground">
+          Somente o Líder pode lançar resultados de produção.
+        </div>
+      )}
+
 
       <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)} className="space-y-3">
         <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-card/60">
