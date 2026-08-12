@@ -181,7 +181,7 @@ function Header() {
   );
 }
 
-function PlanejamentosLista() {
+function PlanejamentosLista({ somenteLeitura = false }: { somenteLeitura?: boolean }) {
   const qc = useQueryClient();
   const listar = useServerFn(listarPlanejamentos);
   const excluir = useServerFn(excluirPlanejamento);
