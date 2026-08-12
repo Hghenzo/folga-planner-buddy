@@ -37,6 +37,10 @@ import {
 import { distribuirNomes, normalizarPlano, planoVazio } from "@/lib/esteira";
 import { AvaliacoesTab } from "@/components/avaliacoes-tab";
 import { ProducaoTab, RankingEquipesCard } from "@/components/producao-tab";
+import { ColaboradoresTab } from "@/components/colaboradores-tab";
+import { FaltasTab } from "@/components/faltas-tab";
+import { usePerfil } from "@/hooks/use-perfil";
+
 
 
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
