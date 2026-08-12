@@ -239,7 +239,7 @@ function PlanejamentosLista({ somenteLeitura = false }: { somenteLeitura?: boole
         </div>
       </div>
 
-      <SugestaoHoje planos={planos} />
+      {!somenteLeitura && <SugestaoHoje planos={planos} />}
 
 
       {isLoading && (
