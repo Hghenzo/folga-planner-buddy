@@ -56,17 +56,34 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 function AppHome() {
+  const { esteira, podeLancarResultados, cargo } = usePerfil();
+  const isFull = esteira === "full";
+  const cols = isFull ? 6 : 7;
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-4 pb-24 sm:p-6">
       <Header />
       <Tabs defaultValue="planejamentos" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6 rounded-2xl bg-card/60">
+        <TabsList
+          className="grid w-full rounded-2xl bg-card/60"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
           <TabsTrigger value="planejamentos" className="rounded-xl text-[11px]">
             Planos
           </TabsTrigger>
-          <TabsTrigger value="calendario" className="rounded-xl text-[11px]">
-            Calendário
-          </TabsTrigger>
+          {isFull ? (
+            <TabsTrigger value="calendario" className="rounded-xl text-[11px]">
+              Calendário
+            </TabsTrigger>
+          ) : (
+            <>
+              <TabsTrigger value="colaboradores" className="rounded-xl text-[11px]">
+                Colab.
+              </TabsTrigger>
+              <TabsTrigger value="faltas" className="rounded-xl text-[11px]">
+                Faltas
+              </TabsTrigger>
+            </>
+          )}
           <TabsTrigger value="esteira" className="rounded-xl text-[11px]">
             Esteira
           </TabsTrigger>
@@ -81,19 +98,30 @@ function AppHome() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="planejamentos">
-          <PlanejamentosLista />
+          <PlanejamentosLista somenteLeitura={cargo === "rep"} />
         </TabsContent>
-        <TabsContent value="calendario">
-          <CalendarioView />
-        </TabsContent>
+        {isFull ? (
+          <TabsContent value="calendario">
+            <CalendarioView />
+          </TabsContent>
+        ) : (
+          <>
+            <TabsContent value="colaboradores">
+              <ColaboradoresTab />
+            </TabsContent>
+            <TabsContent value="faltas">
+              <FaltasTab />
+            </TabsContent>
+          </>
+        )}
         <TabsContent value="esteira">
-          <EsteiraPreview />
+          <EsteiraPreview somenteLeitura={cargo === "rep"} />
         </TabsContent>
         <TabsContent value="avaliacao">
           <AvaliacoesTab />
         </TabsContent>
         <TabsContent value="producao">
-          <ProducaoTab />
+          <ProducaoTab podeLancar={podeLancarResultados} />
         </TabsContent>
         <TabsContent value="ranking">
           <RankingEquipesCard />
@@ -104,6 +132,7 @@ function AppHome() {
     </div>
   );
 }
+
 
 function Header() {
   const navigate = useNavigate();
