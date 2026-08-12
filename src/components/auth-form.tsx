@@ -3,17 +3,48 @@ import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  CARGOS,
+  ESTEIRAS,
+  TURNOS,
+  type Cargo,
+  type EsteiraPerfil,
+  type Turno,
+} from "@/lib/perfil.functions";
 
 type Modo = "login" | "cadastro";
+
+const ROTULO_ESTEIRA: Record<EsteiraPerfil, string> = {
+  full: "Esteira do Full",
+  vermelha: "Esteira Vermelha",
+  amarela: "Esteira Amarela",
+  verde: "Esteira Verde",
+};
+
+const ROTULO_CARGO: Record<Cargo, string> = {
+  ps: "PS",
+  lider: "Líder",
+  rep: "Rep",
+};
 
 export function AuthForm() {
   const [modo, setModo] = useState<Modo>("login");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
+  const [esteira, setEsteira] = useState<EsteiraPerfil>("full");
+  const [cargo, setCargo] = useState<Cargo>("rep");
+  const [turno, setTurno] = useState<Turno>("T1");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -27,7 +58,12 @@ export function AuthForm() {
           password: senha,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { display_name: nome || email.split("@")[0] },
+            data: {
+              display_name: nome || email.split("@")[0],
+              esteira,
+              cargo,
+              turno,
+            },
           },
         });
         if (error) throw error;
@@ -44,6 +80,7 @@ export function AuthForm() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-4">
