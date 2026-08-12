@@ -59,6 +59,30 @@ export type Database = {
         }
         Relationships: []
       }
+      colaboradores: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       equipes: {
         Row: {
           created_at: string
@@ -79,6 +103,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      faltas: {
+        Row: {
+          colaborador_id: string | null
+          created_at: string
+          data: string
+          id: string
+          nome: string
+          observacao: string | null
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          colaborador_id?: string | null
+          created_at?: string
+          data: string
+          id?: string
+          nome: string
+          observacao?: string | null
+          tipo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          colaborador_id?: string | null
+          created_at?: string
+          data?: string
+          id?: string
+          nome?: string
+          observacao?: string | null
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faltas_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pessoas_turma: {
         Row: {
@@ -245,22 +313,31 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cargo: string
           created_at: string
           display_name: string | null
           email: string
+          esteira: string
           id: string
+          turno: string
         }
         Insert: {
+          cargo?: string
           created_at?: string
           display_name?: string | null
           email: string
+          esteira?: string
           id: string
+          turno?: string
         }
         Update: {
+          cargo?: string
           created_at?: string
           display_name?: string | null
           email?: string
+          esteira?: string
           id?: string
+          turno?: string
         }
         Relationships: []
       }
@@ -269,7 +346,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      pode_gerenciar: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

@@ -3,17 +3,48 @@ import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  CARGOS,
+  ESTEIRAS,
+  TURNOS,
+  type Cargo,
+  type EsteiraPerfil,
+  type Turno,
+} from "@/lib/perfil.functions";
 
 type Modo = "login" | "cadastro";
+
+const ROTULO_ESTEIRA: Record<EsteiraPerfil, string> = {
+  full: "Esteira do Full",
+  vermelha: "Esteira Vermelha",
+  amarela: "Esteira Amarela",
+  verde: "Esteira Verde",
+};
+
+const ROTULO_CARGO: Record<Cargo, string> = {
+  ps: "PS",
+  lider: "Líder",
+  rep: "Rep",
+};
 
 export function AuthForm() {
   const [modo, setModo] = useState<Modo>("login");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
+  const [esteira, setEsteira] = useState<EsteiraPerfil>("full");
+  const [cargo, setCargo] = useState<Cargo>("rep");
+  const [turno, setTurno] = useState<Turno>("T1");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -27,7 +58,12 @@ export function AuthForm() {
           password: senha,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { display_name: nome || email.split("@")[0] },
+            data: {
+              display_name: nome || email.split("@")[0],
+              esteira,
+              cargo,
+              turno,
+            },
           },
         });
         if (error) throw error;
@@ -44,6 +80,7 @@ export function AuthForm() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-4">
@@ -64,11 +101,61 @@ export function AuthForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {modo === "cadastro" && (
-            <div>
-              <Label htmlFor="nome">Nome</Label>
-              <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} className="mt-1.5" />
-            </div>
+            <>
+              <div>
+                <Label htmlFor="nome">Nome</Label>
+                <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} className="mt-1.5" />
+              </div>
+              <div>
+                <Label>Esteira</Label>
+                <Select value={esteira} onValueChange={(v) => setEsteira(v as EsteiraPerfil)}>
+                  <SelectTrigger className="mt-1.5 h-11 rounded-xl bg-input/60">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ESTEIRAS.map((e) => (
+                      <SelectItem key={e} value={e}>
+                        {ROTULO_ESTEIRA[e]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Cargo</Label>
+                  <Select value={cargo} onValueChange={(v) => setCargo(v as Cargo)}>
+                    <SelectTrigger className="mt-1.5 h-11 rounded-xl bg-input/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CARGOS.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {ROTULO_CARGO[c]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Turno</Label>
+                  <Select value={turno} onValueChange={(v) => setTurno(v as Turno)}>
+                    <SelectTrigger className="mt-1.5 h-11 rounded-xl bg-input/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TURNOS.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </>
           )}
+
           <div>
             <Label htmlFor="email">Email</Label>
             <Input

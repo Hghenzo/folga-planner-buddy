@@ -37,6 +37,10 @@ import {
 import { distribuirNomes, normalizarPlano, planoVazio } from "@/lib/esteira";
 import { AvaliacoesTab } from "@/components/avaliacoes-tab";
 import { ProducaoTab, RankingEquipesCard } from "@/components/producao-tab";
+import { ColaboradoresTab } from "@/components/colaboradores-tab";
+import { FaltasTab } from "@/components/faltas-tab";
+import { usePerfil } from "@/hooks/use-perfil";
+
 
 
 import { turmaDoDia, TURMAS } from "@/lib/folgas";
@@ -56,17 +60,34 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 function AppHome() {
+  const { esteira, podeLancarResultados, cargo } = usePerfil();
+  const isFull = esteira === "full";
+  const cols = isFull ? 6 : 7;
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-4 pb-24 sm:p-6">
       <Header />
       <Tabs defaultValue="planejamentos" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6 rounded-2xl bg-card/60">
+        <TabsList
+          className="grid w-full rounded-2xl bg-card/60"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
           <TabsTrigger value="planejamentos" className="rounded-xl text-[11px]">
             Planos
           </TabsTrigger>
-          <TabsTrigger value="calendario" className="rounded-xl text-[11px]">
-            Calendário
-          </TabsTrigger>
+          {isFull ? (
+            <TabsTrigger value="calendario" className="rounded-xl text-[11px]">
+              Calendário
+            </TabsTrigger>
+          ) : (
+            <>
+              <TabsTrigger value="colaboradores" className="rounded-xl text-[11px]">
+                Colab.
+              </TabsTrigger>
+              <TabsTrigger value="faltas" className="rounded-xl text-[11px]">
+                Faltas
+              </TabsTrigger>
+            </>
+          )}
           <TabsTrigger value="esteira" className="rounded-xl text-[11px]">
             Esteira
           </TabsTrigger>
@@ -81,19 +102,30 @@ function AppHome() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="planejamentos">
-          <PlanejamentosLista />
+          <PlanejamentosLista somenteLeitura={cargo === "rep"} />
         </TabsContent>
-        <TabsContent value="calendario">
-          <CalendarioView />
-        </TabsContent>
+        {isFull ? (
+          <TabsContent value="calendario">
+            <CalendarioView />
+          </TabsContent>
+        ) : (
+          <>
+            <TabsContent value="colaboradores">
+              <ColaboradoresTab />
+            </TabsContent>
+            <TabsContent value="faltas">
+              <FaltasTab />
+            </TabsContent>
+          </>
+        )}
         <TabsContent value="esteira">
-          <EsteiraPreview />
+          <EsteiraPreview somenteLeitura={cargo === "rep"} />
         </TabsContent>
         <TabsContent value="avaliacao">
           <AvaliacoesTab />
         </TabsContent>
         <TabsContent value="producao">
-          <ProducaoTab />
+          <ProducaoTab podeLancar={podeLancarResultados} />
         </TabsContent>
         <TabsContent value="ranking">
           <RankingEquipesCard />
@@ -104,6 +136,7 @@ function AppHome() {
     </div>
   );
 }
+
 
 function Header() {
   const navigate = useNavigate();
@@ -148,7 +181,7 @@ function Header() {
   );
 }
 
-function PlanejamentosLista() {
+function PlanejamentosLista({ somenteLeitura = false }: { somenteLeitura?: boolean }) {
   const qc = useQueryClient();
   const listar = useServerFn(listarPlanejamentos);
   const excluir = useServerFn(excluirPlanejamento);
@@ -187,7 +220,7 @@ function PlanejamentosLista() {
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <NovoPlanejamentoDialog />
+        {!somenteLeitura && <NovoPlanejamentoDialog />}
         <div className="flex flex-1 gap-2">
           <Input
             value={codigo}
@@ -206,7 +239,7 @@ function PlanejamentosLista() {
         </div>
       </div>
 
-      <SugestaoHoje planos={planos} />
+      {!somenteLeitura && <SugestaoHoje planos={planos} />}
 
 
       {isLoading && (
@@ -241,15 +274,17 @@ function PlanejamentosLista() {
               })}
             </div>
           </Link>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => apagar(p.id)}
-            className="rounded-xl text-destructive"
-            aria-label="Excluir"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {!somenteLeitura && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => apagar(p.id)}
+              className="rounded-xl text-destructive"
+              aria-label="Excluir"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       ))}
     </div>
@@ -369,7 +404,7 @@ export function usarEscalaDoDia(iso: string) {
   return { disponiveis, emFolga, turmaFolga };
 }
 
-function EsteiraPreview() {
+function EsteiraPreview({ somenteLeitura = false }: { somenteLeitura?: boolean }) {
   const hojeIso = new Date().toISOString().slice(0, 10);
   const [plano, setPlano] = useState(planoVazio());
   const [salvando, setSalvando] = useState(false);
@@ -398,17 +433,22 @@ function EsteiraPreview() {
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-border/60 bg-card/40 p-4 text-xs text-muted-foreground">
         <span>
           Prévia das esteiras (folga de hoje: <b>Turma {turmaFolga ?? "—"}</b>).
+          {somenteLeitura && " Somente leitura (Rep)."}
         </span>
-        <Button onClick={salvar} disabled={salvando} variant="outline" className="h-10 rounded-xl">
-          <Plus className="mr-2 h-4 w-4" /> Salvar planejamento
-        </Button>
+        {!somenteLeitura && (
+          <Button onClick={salvar} disabled={salvando} variant="outline" className="h-10 rounded-xl">
+            <Plus className="mr-2 h-4 w-4" /> Salvar planejamento
+          </Button>
+        )}
       </div>
-      <EsteirasTabs
-        value={plano}
-        onChange={setPlano}
-        disponiveis={disponiveis}
-        emFolga={emFolga}
-      />
+      <div className={somenteLeitura ? "pointer-events-none opacity-90" : undefined}>
+        <EsteirasTabs
+          value={plano}
+          onChange={setPlano}
+          disponiveis={disponiveis}
+          emFolga={emFolga}
+        />
+      </div>
     </div>
   );
 }
