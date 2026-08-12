@@ -274,15 +274,17 @@ function PlanejamentosLista({ somenteLeitura = false }: { somenteLeitura?: boole
               })}
             </div>
           </Link>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => apagar(p.id)}
-            className="rounded-xl text-destructive"
-            aria-label="Excluir"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {!somenteLeitura && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => apagar(p.id)}
+              className="rounded-xl text-destructive"
+              aria-label="Excluir"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       ))}
     </div>
