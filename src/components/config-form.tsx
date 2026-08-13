@@ -79,6 +79,8 @@ export function ConfigForm({ inicial }: Props) {
         </div>
       </Panel>
 
+      <PerfilCard />
+
       {TURMAS.map((t) => {
         const cls = TURMAS_CLASSES[t];
         return (
