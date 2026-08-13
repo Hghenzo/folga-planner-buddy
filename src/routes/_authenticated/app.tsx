@@ -441,14 +441,13 @@ function EsteiraPreview({ somenteLeitura = false }: { somenteLeitura?: boolean }
           </Button>
         )}
       </div>
-      <div className={somenteLeitura ? "pointer-events-none opacity-90" : undefined}>
-        <EsteirasTabs
-          value={plano}
-          onChange={setPlano}
-          disponiveis={disponiveis}
-          emFolga={emFolga}
-        />
-      </div>
+      <EsteirasTabs
+        value={plano}
+        onChange={setPlano}
+        readOnly={somenteLeitura}
+        disponiveis={disponiveis}
+        emFolga={emFolga}
+      />
     </div>
   );
 }
