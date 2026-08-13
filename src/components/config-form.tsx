@@ -8,6 +8,17 @@ import { Label } from "@/components/ui/label";
 import { ChevronLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import { salvarPessoas as salvarPessoasCloud } from "@/lib/planejamentos.functions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { usePerfil } from "@/hooks/use-perfil";
+import {
+  atualizarPerfil,
+  CARGOS,
+  ESTEIRAS as ESTEIRAS_PERFIL,
+  TURNOS,
+  type Cargo,
+  type EsteiraPerfil,
+  type Turno,
+} from "@/lib/perfil.functions";
 import {
   TURMAS,
   TURMAS_CLASSES,
@@ -79,6 +90,8 @@ export function ConfigForm({ inicial }: Props) {
         </div>
       </Panel>
 
+      <PerfilCard />
+
       {TURMAS.map((t) => {
         const cls = TURMAS_CLASSES[t];
         return (
@@ -116,5 +129,110 @@ export function ConfigForm({ inicial }: Props) {
         Salvar
       </Button>
     </div>
+  );
+}
+
+const ROTULO_ESTEIRA: Record<EsteiraPerfil, string> = {
+  full: "Esteira do Full",
+  vermelha: "Esteira vermelha",
+  amarela: "Esteira amarela",
+  verde: "Esteira verde",
+};
+const ROTULO_CARGO: Record<Cargo, string> = { ps: "PS", lider: "Líder", rep: "Rep" };
+
+function PerfilCard() {
+  const qc = useQueryClient();
+  const atualizar = useServerFn(atualizarPerfil);
+  const { perfil, carregando } = usePerfil();
+  const [salvando, setSalvando] = useState(false);
+  const [form, setForm] = useState<{ esteira: EsteiraPerfil; cargo: Cargo; turno: Turno } | null>(
+    null,
+  );
+
+  const atual = form ?? (perfil ? { esteira: perfil.esteira, cargo: perfil.cargo, turno: perfil.turno } : null);
+
+  async function salvarPerfil() {
+    if (!atual) return;
+    setSalvando(true);
+    try {
+      await atualizar({ data: atual });
+      qc.invalidateQueries({ queryKey: ["perfil"] });
+      toast.success("Perfil atualizado");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao salvar");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  if (carregando || !atual) return null;
+
+  return (
+    <Panel className="p-4 sm:p-5">
+      <h2 className="text-lg font-black">Meu perfil</h2>
+      <p className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+        Cargo define o que você pode editar (Rep é somente leitura).
+      </p>
+      <div className="mt-4 space-y-3">
+        <div>
+          <Label className="text-[11px] uppercase tracking-widest text-muted-foreground">Esteira</Label>
+          <Select
+            value={atual.esteira}
+            onValueChange={(v) => setForm({ ...atual, esteira: v as EsteiraPerfil })}
+          >
+            <SelectTrigger className="mt-1.5 h-11 rounded-xl bg-input/60">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ESTEIRAS_PERFIL.map((e) => (
+                <SelectItem key={e} value={e}>
+                  {ROTULO_ESTEIRA[e]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-[11px] uppercase tracking-widest text-muted-foreground">Cargo</Label>
+            <Select value={atual.cargo} onValueChange={(v) => setForm({ ...atual, cargo: v as Cargo })}>
+              <SelectTrigger className="mt-1.5 h-11 rounded-xl bg-input/60">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CARGOS.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {ROTULO_CARGO[c]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-[11px] uppercase tracking-widest text-muted-foreground">Turno</Label>
+            <Select value={atual.turno} onValueChange={(v) => setForm({ ...atual, turno: v as Turno })}>
+              <SelectTrigger className="mt-1.5 h-11 rounded-xl bg-input/60">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TURNOS.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <Button
+          onClick={salvarPerfil}
+          disabled={salvando}
+          variant="outline"
+          className="h-11 w-full rounded-xl"
+        >
+          <Save className="mr-2 h-4 w-4" /> Salvar perfil
+        </Button>
+      </div>
+    </Panel>
   );
 }
