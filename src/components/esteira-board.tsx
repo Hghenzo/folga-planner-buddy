@@ -443,12 +443,15 @@ export function EsteirasTabs({
     onChange({ ...plano, [key]: e });
   }
 
+  const qtdDiaristas = (k: EsteiraKey) =>
+    k === "vermelha" || k === "amarela" || k === "verde" ? plano.diaristas[k] : 0;
+
   function gerar(key: EsteiraKey) {
     const def = esteiraDef(key);
     // mantém o que já foi preenchido manualmente; só completa os vazios
     const base = normalizarEsteira(plano[key], ilhasDe(key));
     const nova = def.diaristas
-      ? distribuirComDiaristas(base, disponiveis, plano.diaristas)
+      ? distribuirComDiaristas(base, disponiveis, qtdDiaristas(key))
       : distribuirNomes(base, disponiveis);
     onChange({ ...plano, [key]: nova });
   }
@@ -470,16 +473,19 @@ export function EsteirasTabs({
               {d.diaristas && (
                 <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                   <Users className="h-4 w-4" />
-                  Diaristas hoje
+                  Diaristas na {d.nome.toLowerCase()}
                   <Input
                     type="number"
                     min={0}
                     max={50}
-                    value={plano.diaristas}
+                    value={qtdDiaristas(d.key)}
                     onChange={(ev) =>
                       onChange({
                         ...plano,
-                        diaristas: Math.max(0, Math.min(50, Number(ev.target.value) || 0)),
+                        diaristas: {
+                          ...plano.diaristas,
+                          [d.key]: Math.max(0, Math.min(50, Number(ev.target.value) || 0)),
+                        },
                       })
                     }
                     className="h-9 w-20 rounded-lg bg-input/60 text-center text-sm font-bold"
@@ -498,7 +504,7 @@ export function EsteirasTabs({
             <p className="px-1 text-[11px] text-muted-foreground">
               Gerar completa só os campos vazios — nomes já colocados não são trocados.
               {d.diaristas &&
-                " Diaristas entram primeiro na pesca; o restante vai para a indução, nunca na montagem."}
+                ` Os diaristas entram numerados (Diarista 1, 2, 3…) primeiro na pesca; o restante vai para a indução, nunca na montagem.`}
             </p>
           )}
           <EsteiraBoard
