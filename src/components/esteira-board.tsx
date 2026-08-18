@@ -473,16 +473,19 @@ export function EsteirasTabs({
               {d.diaristas && (
                 <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                   <Users className="h-4 w-4" />
-                  Diaristas hoje
+                  Diaristas na {d.nome.toLowerCase()}
                   <Input
                     type="number"
                     min={0}
                     max={50}
-                    value={plano.diaristas}
+                    value={qtdDiaristas(d.key)}
                     onChange={(ev) =>
                       onChange({
                         ...plano,
-                        diaristas: Math.max(0, Math.min(50, Number(ev.target.value) || 0)),
+                        diaristas: {
+                          ...plano.diaristas,
+                          [d.key]: Math.max(0, Math.min(50, Number(ev.target.value) || 0)),
+                        },
                       })
                     }
                     className="h-9 w-20 rounded-lg bg-input/60 text-center text-sm font-bold"
