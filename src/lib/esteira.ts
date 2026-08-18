@@ -110,14 +110,17 @@ export type EsteiraState = {
   mesa_ajuda: MesaAjuda;
 };
 
+/** Quantidade de diaristas por esteira (só as coloridas têm) */
+export type DiaristasPlano = { vermelha: number; amarela: number; verde: number };
+
 /** Conjunto das 4 esteiras salvas em um planejamento */
 export type PlanoEsteiras = {
   full: EsteiraState;
   vermelha: EsteiraState;
   amarela: EsteiraState;
   verde: EsteiraState;
-  /** quantidade de diaristas do dia */
-  diaristas: number;
+  /** quantidade de diaristas do dia, por esteira */
+  diaristas: DiaristasPlano;
 };
 
 export function esteiraVazia(ilhasIds: readonly string[] = TODAS_ILHAS): EsteiraState {
@@ -140,9 +143,24 @@ export function planoVazio(): PlanoEsteiras {
     vermelha: esteiraVazia(ilhasDe("vermelha")),
     amarela: esteiraVazia(ilhasDe("amarela")),
     verde: esteiraVazia(ilhasDe("verde")),
-    diaristas: 0,
+    diaristas: { vermelha: 0, amarela: 0, verde: 0 },
   };
 }
+
+function num(v: unknown): number {
+  return typeof v === "number" && isFinite(v) ? Math.max(0, Math.floor(v)) : 0;
+}
+
+/** Aceita formato antigo (número único) ou novo (por esteira). */
+function normalizarDiaristas(raw: unknown): DiaristasPlano {
+  if (typeof raw === "number") {
+    const n = num(raw);
+    return { vermelha: n, amarela: n, verde: n };
+  }
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return { vermelha: num(r.vermelha), amarela: num(r.amarela), verde: num(r.verde) };
+}
+
 
 /** Aceita formato antigo (string) ou novo (array de strings). */
 function lista(raw: unknown, minimo = 1): string[] {
