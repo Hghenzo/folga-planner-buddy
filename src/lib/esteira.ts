@@ -340,7 +340,11 @@ export function distribuirComDiaristas(
   const ids = Object.keys(base.ilhas ?? {});
   const e: EsteiraState = normalizarEsteira(JSON.parse(JSON.stringify(base)), ids);
   const total = Math.max(0, Math.floor(qtdDiaristas || 0));
-  const fila = Array.from({ length: total }, (_, i) => `${prefixo} ${i + 1}`);
+  // não duplica diaristas já posicionados manualmente / em geração anterior
+  const jaUsados = new Set(nomesUsados(e).map((n) => n.toLowerCase()));
+  const fila = Array.from({ length: total }, (_, i) => `${prefixo} ${i + 1}`).filter(
+    (n) => !jaUsados.has(n.toLowerCase()),
+  );
 
   const ordem = ordemIlhas(e, ids);
   // 1) pesca das ilhas
