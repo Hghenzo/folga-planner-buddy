@@ -504,7 +504,7 @@ export function EsteirasTabs({
             <p className="px-1 text-[11px] text-muted-foreground">
               Gerar completa só os campos vazios — nomes já colocados não são trocados.
               {d.diaristas &&
-                " Diaristas entram primeiro na pesca; o restante vai para a indução, nunca na montagem."}
+                ` Os diaristas entram numerados (Diarista 1, 2, 3…) primeiro na pesca; o restante vai para a indução, nunca na montagem.`}
             </p>
           )}
           <EsteiraBoard
