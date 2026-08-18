@@ -443,12 +443,15 @@ export function EsteirasTabs({
     onChange({ ...plano, [key]: e });
   }
 
+  const qtdDiaristas = (k: EsteiraKey) =>
+    k === "vermelha" || k === "amarela" || k === "verde" ? plano.diaristas[k] : 0;
+
   function gerar(key: EsteiraKey) {
     const def = esteiraDef(key);
     // mantém o que já foi preenchido manualmente; só completa os vazios
     const base = normalizarEsteira(plano[key], ilhasDe(key));
     const nova = def.diaristas
-      ? distribuirComDiaristas(base, disponiveis, plano.diaristas)
+      ? distribuirComDiaristas(base, disponiveis, qtdDiaristas(key))
       : distribuirNomes(base, disponiveis);
     onChange({ ...plano, [key]: nova });
   }
