@@ -223,7 +223,7 @@ export function normalizarPlano(raw: unknown): PlanoEsteiras {
     vermelha: normalizarEsteira(r.vermelha, ilhasDe("vermelha")),
     amarela: normalizarEsteira(r.amarela, ilhasDe("amarela")),
     verde: normalizarEsteira(r.verde, ilhasDe("verde")),
-    diaristas: typeof r.diaristas === "number" ? Math.max(0, Math.floor(r.diaristas)) : 0,
+    diaristas: normalizarDiaristas(r.diaristas),
   };
 }
 
